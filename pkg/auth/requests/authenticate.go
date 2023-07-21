@@ -2,23 +2,29 @@ package requests
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/httperror"
-	"github.com/rancher/rancher/pkg/auth/providerrefresh"
-	"github.com/rancher/rancher/pkg/auth/providers"
-	"github.com/rancher/rancher/pkg/auth/providers/common"
-	"github.com/rancher/rancher/pkg/auth/tokens"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/rancher/rancher/pkg/auth/providerrefresh"
+	"github.com/rancher/rancher/pkg/auth/providers"
+	"github.com/rancher/rancher/pkg/auth/providers/common"
+	"github.com/rancher/rancher/pkg/auth/tokens"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/types/config"
 )
 
 var (
@@ -96,10 +102,106 @@ func tokenKeyIndexer(obj interface{}) ([]string, error) {
 	return []string{token.Token}, nil
 }
 
+func decodeJWT(jwtToken string, secretKey string) (map[string]interface{}, error) {
+	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+		// Make sure to validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Invalid signing method")
+		}
+		return []byte(secretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the token is valid
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("Invalid token")
+}
+
+func decryptAES(encryptedData string, key string) (string, error) {
+	keyBytes := []byte(key)
+	encryptedBytes, err := base64.StdEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(encryptedBytes) < nonceSize {
+		return "", fmt.Errorf("Invalid data")
+	}
+
+	nonce, ciphertext := encryptedBytes[:nonceSize], encryptedBytes[nonceSize:]
+	decryptedData, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decryptedData), nil
+}
+
 func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResponse, error) {
 	authResp := &AuthenticatorResponse{
 		Extras: make(map[string][]string),
 	}
+
+	//var bodyBytes []byte
+	//var err error
+	//
+	//if req.Body != nil {
+	//	bodyBytes, err = ioutil.ReadAll(req.Body)
+	//	if err != nil {
+	//		fmt.Printf("Body reading error: %v", err)
+	//	}
+	//	defer req.Body.Close()
+	//}
+	//
+	//fmt.Printf("Headers: %+v\n", req.Header)
+	//
+	//if len(bodyBytes) > 0 {
+	//	var prettyJSON bytes.Buffer
+	//	if err = json.Indent(&prettyJSON, bodyBytes, "", "\t"); err != nil {
+	//		fmt.Printf("JSON parse error: %v", err)
+	//	}
+	//	logrus.Infof("%s", string(prettyJSON.Bytes()))
+	//} else {
+	//	fmt.Printf("Body: No Body Supplied\n")
+	//}
+	if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
+		parts := strings.Split(req.Header.Get("Authorization"), " ")
+		authJWT, err := decodeJWT(parts[1], "your_secret_key_here")
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode JWT: %v", err)
+		}
+		//logrus.Infof("decoded token: %s", b64decoded)
+		//decryptedToken, err := decryptAES(string(b64decoded[:]), "your_secret_key_here123456789123")
+		//if err != nil {
+		//	return nil, fmt.Errorf("unable to decrypt token JWT: %v", err)
+		//}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authJWT["ranchertoken"]))
+	}
+
+	// original PoC
+	//if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
+	//authResp.IsAuthed = true
+	//authResp.User = "user-fqq5f"
+	//return authResp, nil
+	//}
+
 	token, err := a.TokenFromRequest(req)
 	if err != nil {
 		return nil, err
