@@ -158,6 +158,7 @@ func UnmigrateAdGUIDUsers(clientConfig *restclient.Config, dryRun bool, deleteMi
 
 	// set the status to running and reset the unmigrated fields
 	if !dryRun {
+		expireCurrentUITokens(sc)
 		err = updateMigrationStatus(sc, activedirectory.StatusMigrationField, activedirectory.StatusMigrationRunning)
 		if err != nil {
 			return fmt.Errorf("unable to update migration status configmap: %v", err)

@@ -4,15 +4,20 @@ import (
 	"fmt"
 	"time"
 
-	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
-	v3norman "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
+	v3norman "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+
 	"github.com/rancher/rancher/pkg/auth/tokens"
 	"github.com/rancher/rancher/pkg/types/config"
+)
+
+const (
+	uiSessionToken = "UI session"
 )
 
 func collectTokens(workunits *[]migrateUserWorkUnit, sc *config.ScaledContext) error {
@@ -123,6 +128,27 @@ func migrateTokens(workunit *migrateUserWorkUnit, sc *config.ScaledContext, dryR
 			err := updateToken(tokenInterface, userToken, localPrincipalID, workunit.guid, workunit.originalUser, workunit.principal)
 			if err != nil {
 				logrus.Errorf("[%v] error while migrating tokens for user '%v': %v", migrateTokensOperation, workunit.originalUser.Name, err)
+			}
+		}
+	}
+}
+
+func expireCurrentUITokens(sc *config.ScaledContext) {
+	tokenInterface := sc.Management.Tokens("")
+	tokenList, err := tokenInterface.List(metav1.ListOptions{})
+	if err != nil {
+		logrus.Errorf("[%v] unable to fetch token objects for UI session expiration: %v", migrateAdUserOperation, err)
+	}
+
+	for _, token := range tokenList.Items {
+		if token.Description == uiSessionToken {
+			enabledValue := false
+			token.Enabled = &enabledValue
+			logrus.Infof("[%v] disabling UI session token %v", migrateAdUserOperation, token.Name)
+			_, err = tokenInterface.Update(&token)
+			if err != nil {
+				// log an error, but continue
+				logrus.Errorf("[%v] unable to disable UI session token: %v", migrateAdUserOperation, err)
 			}
 		}
 	}
