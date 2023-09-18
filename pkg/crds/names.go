@@ -198,7 +198,7 @@ var MigratedResources = map[string]bool{
 	"apprevisions.project.cattle.io":                                  false,
 	"apps.catalog.cattle.io":                                          false,
 	"apps.project.cattle.io":                                          false,
-	"authconfigs.management.cattle.io":                                false,
+	"authconfigs.management.cattle.io":                                true,
 	"authproviders.management.cattle.io":                              false,
 	"authtokens.management.cattle.io":                                 false,
 	"azureadproviders.management.cattle.io":                           false,

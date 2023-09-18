@@ -165,23 +165,42 @@ type SetPasswordInput struct {
 }
 
 // +genclient
-// +kubebuilder:skipversion
+// +kubebuilder:resource:scope=Cluster
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// AuthConfig holds the configuration information for an Auth Provider.
 type AuthConfig struct {
-	metav1.TypeMeta   `json:",inline" mapstructure:",squash"`
-	metav1.ObjectMeta `json:"metadata,omitempty" mapstructure:"metadata"`
+	metav1.TypeMeta `json:",inline"`
 
-	Type                string           `json:"type" norman:"noupdate"`
-	Enabled             bool             `json:"enabled,omitempty"`
-	AccessMode          string           `json:"accessMode,omitempty" norman:"required,notnullable,type=enum,options=required|restricted|unrestricted"`
-	AllowedPrincipalIDs []string         `json:"allowedPrincipalIds,omitempty" norman:"type=array[reference[principal]]"`
-	Status              AuthConfigStatus `json:"status"`
+	// Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Type refers to which Auth Provider this AuthConfig represents.
+	Type string `json:"type" norman:"noupdate"`
+
+	// Enabled If true, this Auth Provider is enabled.
+	Enabled bool `json:"enabled,omitempty"`
+
+	// AccessMode refers to whether or not all users from the Auth Provider can login or if they need to be added to the AllowedPrincipalIDs list to be able to login.
+	// +kubebuilder:validation:Enum={"required","restricted","unrestricted"}
+	// +optional
+	AccessMode string `json:"accessMode,omitempty" norman:"required,notnullable,type=enum,options=required|restricted|unrestricted"`
+
+	// AllowedPrincipalIDs is the list of principalIDs that are allowed to login via this Auth Provider.
+	// +optional
+	AllowedPrincipalIDs []string `json:"allowedPrincipalIds,omitempty" norman:"type=array[reference[principal]]"`
+
+	// Status refers to the list of AuthConfigConditions that apply to this Auth Provider.
+	// +optional
+	Status AuthConfigStatus `json:"status,omitempty"`
 }
 
 type AuthConfigStatus struct {
-	Conditions []AuthConfigConditions `json:"conditions"`
+	// AuthConfigStatus represents an assortment of statuses that are related to a given Auth Provider.
+	// +optional
+	Conditions []AuthConfigConditions `json:"conditions,omitempty"`
 }
 
 type AuthConfigConditions struct {
