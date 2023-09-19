@@ -6,15 +6,17 @@ import (
 	"fmt"
 
 	"github.com/rancher/norman/objectclient"
-	"github.com/rancher/rancher/pkg/auth/cleanup"
-	"github.com/rancher/rancher/pkg/auth/providerrefresh"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/rancher/rancher/pkg/auth/cleanup"
+	"github.com/rancher/rancher/pkg/auth/providerrefresh"
+	"github.com/rancher/rancher/pkg/auth/providers/common"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/types/config"
 )
 
 const (
@@ -93,6 +95,8 @@ func (ac *authConfigController) sync(key string, obj *v3.AuthConfig) (runtime.Ob
 		return obj, err
 	}
 
+	activeProviderConfig, _ := common.ActiveProviderInConfig(*obj)
+
 	unstructuredObj, err := ac.getUnstructured(obj)
 	if err != nil {
 		return nil, err
@@ -100,7 +104,7 @@ func (ac *authConfigController) sync(key string, obj *v3.AuthConfig) (runtime.Ob
 
 	value := obj.Annotations[CleanupAnnotation]
 	if value == "" {
-		if obj.Enabled {
+		if activeProviderConfig.Enabled {
 			value = CleanupUnlocked
 		} else {
 			value = CleanupRancherLocked
@@ -109,12 +113,12 @@ func (ac *authConfigController) sync(key string, obj *v3.AuthConfig) (runtime.Ob
 		return ac.updateAuthConfig(unstructuredObj, obj)
 	}
 
-	if obj.Enabled && value == CleanupRancherLocked {
+	if activeProviderConfig.Enabled && value == CleanupRancherLocked {
 		ac.setCleanupAnnotation(unstructuredObj, CleanupUnlocked)
 		return ac.updateAuthConfig(unstructuredObj, obj)
 	}
 
-	if !obj.Enabled {
+	if !activeProviderConfig.Enabled {
 		refusalFmt := "Refusing to reset the config and clean up resources of the auth provider %s because its auth config annotation %s is set to %s."
 
 		switch value {

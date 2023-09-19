@@ -9,6 +9,10 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/types"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/api/secrets"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
@@ -20,9 +24,6 @@ import (
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -162,7 +163,7 @@ func (s *Provider) getSamlConfig() (*v32.SamlConfig, error) {
 	}
 
 	if enabled, ok := storedSamlConfigMap["enabled"].(bool); ok {
-		storedSamlConfig.Enabled = enabled
+		storedSamlConfig.Common.Enabled = enabled
 	}
 
 	if storedSamlConfig.SpKey != "" {
@@ -200,7 +201,7 @@ func (s *Provider) saveSamlConfig(config *v32.SamlConfig) error {
 
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = configType
+	config.Common.Type = configType
 	storedSamlConfig.Annotations = config.Annotations
 	config.ObjectMeta = storedSamlConfig.ObjectMeta
 
@@ -211,11 +212,11 @@ func (s *Provider) saveSamlConfig(config *v32.SamlConfig) error {
 		field = strings.ToLower(fields[0])
 	}
 	if err := common.CreateOrUpdateSecrets(s.secrets, config.SpKey,
-		field, strings.ToLower(config.Type)); err != nil {
+		field, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
 
-	config.SpKey = common.GetFullSecretName(config.Type, field)
+	config.SpKey = common.GetFullSecretName(config.Common.Type, field)
 	if s.hasLdapGroupSearch() {
 		combinedConfig, err := s.combineSamlAndLdapConfig(config)
 		if err != nil {
@@ -323,7 +324,7 @@ func (s *Provider) CanAccessWithGroupProviders(userPrincipalID string, groupPrin
 		logrus.Errorf("Error fetching saml config: %v", err)
 		return false, err
 	}
-	allowed, err := s.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := s.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -387,7 +388,7 @@ func (s *Provider) combineSamlAndLdapConfig(config *v32.SamlConfig) (runtime.Obj
 			s.secrets,
 			ldapConfig.LdapFields.ServiceAccountPassword,
 			client.LdapConfigFieldServiceAccountPassword,
-			samlConfig.Type,
+			samlConfig.Common.Type,
 		)
 		if err != nil {
 			return config, fmt.Errorf("unable to save ldap service account password: %w", err)
@@ -431,5 +432,5 @@ func (s *Provider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !samlConfig.Enabled, nil
+	return !samlConfig.Common.Enabled, nil
 }

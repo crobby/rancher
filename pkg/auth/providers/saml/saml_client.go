@@ -20,14 +20,15 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/gorilla/mux"
 	responsewriter "github.com/rancher/apiserver/pkg/middleware"
+	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/settings"
 	"github.com/rancher/rancher/pkg/auth/tokens"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/namespace"
-	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type IDPMetadata struct {
@@ -309,9 +310,9 @@ func (s *Provider) HandleSamlAssertion(w http.ResponseWriter, r *http.Request, a
 		http.Redirect(w, r, redirectURL+"errorCode=422&errorMsg="+UITranslationKeyForErrorMessage, http.StatusFound)
 		return
 	}
-	allowedPrincipals := config.AllowedPrincipalIDs
+	allowedPrincipals := config.Common.AllowedPrincipalIDs
 
-	allowed, err := s.userMGR.CheckAccess(config.AccessMode, allowedPrincipals, userPrincipal.Name, groupPrincipals)
+	allowed, err := s.userMGR.CheckAccess(config.Common.AccessMode, allowedPrincipals, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		log.Errorf("SAML: Error during login while checking access %v", err)
 		http.Redirect(w, r, redirectURL+"errorCode=500", http.StatusFound)
@@ -335,7 +336,7 @@ func (s *Provider) HandleSamlAssertion(w http.ResponseWriter, r *http.Request, a
 			return
 		}
 
-		config.Enabled = true
+		config.Common.Enabled = true
 		err = s.saveSamlConfig(config)
 		if err != nil {
 			log.Errorf("SAML: Error saving saml config %v", err)

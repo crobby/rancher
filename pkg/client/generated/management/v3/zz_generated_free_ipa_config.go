@@ -2,14 +2,12 @@ package client
 
 const (
 	FreeIpaConfigType                                 = "freeIpaConfig"
-	FreeIpaConfigFieldAccessMode                      = "accessMode"
-	FreeIpaConfigFieldAllowedPrincipalIDs             = "allowedPrincipalIds"
 	FreeIpaConfigFieldAnnotations                     = "annotations"
 	FreeIpaConfigFieldCertificate                     = "certificate"
+	FreeIpaConfigFieldCommon                          = "common"
 	FreeIpaConfigFieldConnectionTimeout               = "connectionTimeout"
 	FreeIpaConfigFieldCreated                         = "created"
 	FreeIpaConfigFieldCreatorID                       = "creatorId"
-	FreeIpaConfigFieldEnabled                         = "enabled"
 	FreeIpaConfigFieldGroupDNAttribute                = "groupDNAttribute"
 	FreeIpaConfigFieldGroupMemberMappingAttribute     = "groupMemberMappingAttribute"
 	FreeIpaConfigFieldGroupMemberUserAttribute        = "groupMemberUserAttribute"
@@ -27,9 +25,7 @@ const (
 	FreeIpaConfigFieldServiceAccountDistinguishedName = "serviceAccountDistinguishedName"
 	FreeIpaConfigFieldServiceAccountPassword          = "serviceAccountPassword"
 	FreeIpaConfigFieldStartTLS                        = "starttls"
-	FreeIpaConfigFieldStatus                          = "status"
 	FreeIpaConfigFieldTLS                             = "tls"
-	FreeIpaConfigFieldType                            = "type"
 	FreeIpaConfigFieldUUID                            = "uuid"
 	FreeIpaConfigFieldUserDisabledBitMask             = "userDisabledBitMask"
 	FreeIpaConfigFieldUserEnabledAttribute            = "userEnabledAttribute"
@@ -43,14 +39,12 @@ const (
 )
 
 type FreeIpaConfig struct {
-	AccessMode                      string            `json:"accessMode,omitempty" yaml:"accessMode,omitempty"`
-	AllowedPrincipalIDs             []string          `json:"allowedPrincipalIds,omitempty" yaml:"allowedPrincipalIds,omitempty"`
 	Annotations                     map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 	Certificate                     string            `json:"certificate,omitempty" yaml:"certificate,omitempty"`
+	Common                          *AuthConfigCommon `json:"common,omitempty" yaml:"common,omitempty"`
 	ConnectionTimeout               int64             `json:"connectionTimeout,omitempty" yaml:"connectionTimeout,omitempty"`
 	Created                         string            `json:"created,omitempty" yaml:"created,omitempty"`
 	CreatorID                       string            `json:"creatorId,omitempty" yaml:"creatorId,omitempty"`
-	Enabled                         bool              `json:"enabled,omitempty" yaml:"enabled,omitempty"`
 	GroupDNAttribute                string            `json:"groupDNAttribute,omitempty" yaml:"groupDNAttribute,omitempty"`
 	GroupMemberMappingAttribute     string            `json:"groupMemberMappingAttribute,omitempty" yaml:"groupMemberMappingAttribute,omitempty"`
 	GroupMemberUserAttribute        string            `json:"groupMemberUserAttribute,omitempty" yaml:"groupMemberUserAttribute,omitempty"`
@@ -68,9 +62,7 @@ type FreeIpaConfig struct {
 	ServiceAccountDistinguishedName string            `json:"serviceAccountDistinguishedName,omitempty" yaml:"serviceAccountDistinguishedName,omitempty"`
 	ServiceAccountPassword          string            `json:"serviceAccountPassword,omitempty" yaml:"serviceAccountPassword,omitempty"`
 	StartTLS                        bool              `json:"starttls,omitempty" yaml:"starttls,omitempty"`
-	Status                          *AuthConfigStatus `json:"status,omitempty" yaml:"status,omitempty"`
 	TLS                             bool              `json:"tls,omitempty" yaml:"tls,omitempty"`
-	Type                            string            `json:"type,omitempty" yaml:"type,omitempty"`
 	UUID                            string            `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 	UserDisabledBitMask             int64             `json:"userDisabledBitMask,omitempty" yaml:"userDisabledBitMask,omitempty"`
 	UserEnabledAttribute            string            `json:"userEnabledAttribute,omitempty" yaml:"userEnabledAttribute,omitempty"`

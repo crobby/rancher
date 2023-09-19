@@ -8,12 +8,13 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
+	"github.com/sirupsen/logrus"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	managementschema "github.com/rancher/rancher/pkg/schemas/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 )
 
 func (p *adProvider) formatter(apiContext *types.APIContext, resource *types.RawResource) {
@@ -80,7 +81,7 @@ func (p *adProvider) testAndApply(actionName string, action *types.Action, reque
 	}
 
 	//if this works, save adConfig CR adding enabled flag
-	config.Enabled = configApplyInput.Enabled
+	config.Common.Enabled = configApplyInput.Enabled
 	err = p.saveActiveDirectoryConfig(config)
 	if err != nil {
 		return httperror.NewAPIError(httperror.ServerError, fmt.Sprintf("Failed to save activedirectory config: %v", err))
@@ -103,15 +104,15 @@ func (p *adProvider) saveActiveDirectoryConfig(config *v32.ActiveDirectoryConfig
 	}
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = client.ActiveDirectoryConfigType
+	config.Common.Type = client.ActiveDirectoryConfigType
 	config.ObjectMeta = storedConfig.ObjectMeta
 
 	field := strings.ToLower(client.ActiveDirectoryConfigFieldServiceAccountPassword)
-	if err := common.CreateOrUpdateSecrets(p.secrets, config.ServiceAccountPassword, field, strings.ToLower(convert.ToString(config.Type))); err != nil {
+	if err := common.CreateOrUpdateSecrets(p.secrets, config.ServiceAccountPassword, field, strings.ToLower(convert.ToString(config.Common.Type))); err != nil {
 		return err
 	}
 
-	config.ServiceAccountPassword = common.GetFullSecretName(config.Type, field)
+	config.ServiceAccountPassword = common.GetFullSecretName(config.Common.Type, field)
 
 	logrus.Debugf("updating activeDirectoryConfig")
 	_, err = p.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)

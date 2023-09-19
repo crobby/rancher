@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/providers/saml"
 	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/types/config"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type authProvider struct {
@@ -43,7 +44,9 @@ func (a *authProvider) sync(key string, config *v3.AuthConfig) (runtime.Object, 
 		return nil, nil
 	}
 
-	if !config.Enabled {
+	activeProviderConfig, _ := common.ActiveProviderInConfig(*config)
+
+	if !activeProviderConfig.Enabled {
 		return nil, nil
 	}
 

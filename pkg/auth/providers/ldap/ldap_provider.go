@@ -10,6 +10,10 @@ import (
 	ldapv3 "github.com/go-ldap/ldap/v3"
 	"github.com/rancher/norman/objectclient"
 	"github.com/rancher/norman/types"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
@@ -19,9 +23,6 @@ import (
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -296,7 +297,7 @@ func (p *ldapProvider) CanAccessWithGroupProviders(userPrincipalID string, group
 		logrus.Errorf("Error fetching ldap config: %v", err)
 		return false, err
 	}
-	allowed, err := p.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := p.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -409,5 +410,5 @@ func (p *ldapProvider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !ldapConfig.Enabled, nil
+	return !ldapConfig.Common.Enabled, nil
 }

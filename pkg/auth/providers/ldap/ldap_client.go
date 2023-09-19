@@ -11,10 +11,11 @@ import (
 	ldapv3 "github.com/go-ldap/ldap/v3"
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/httperror"
-	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 )
 
 var operationalAttrList = []string{"1.1", "+", "*"}
@@ -80,7 +81,7 @@ func (p *ldapProvider) loginUser(lConn ldapv3.Client, credential *v32.BasicLogin
 		return v3.Principal{}, nil, err
 	}
 
-	allowed, err := p.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
+	allowed, err := p.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return v3.Principal{}, nil, err
 	}
@@ -272,7 +273,7 @@ func (p *ldapProvider) getPrincipal(distinguishedName string, scope string, conf
 	err = lConn.Bind(serviceAccountUsername, config.ServiceAccountPassword)
 
 	if err != nil {
-		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Enabled {
+		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Common.Enabled {
 			var kind string
 			if strings.EqualFold("user", entityType) {
 				kind = "user"

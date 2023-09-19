@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
+
+	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 const GraphEndpointMigratedAnnotation = "auth.cattle.io/azuread-endpoint-migrated"
 
 func authProviderEnabled(config *v32.AzureADConfig) bool {
-	return config.Enabled && config.GraphEndpoint != ""
+	return config.Common.Enabled && config.GraphEndpoint != ""
 }
 
 // IsConfigDeprecated returns true if a given Azure AD auth config specifies the old,

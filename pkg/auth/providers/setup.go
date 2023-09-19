@@ -5,6 +5,7 @@ import (
 
 	"github.com/rancher/norman/store/subtype"
 	"github.com/rancher/norman/types"
+
 	"github.com/rancher/rancher/pkg/auth/api/secrets"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"github.com/rancher/rancher/pkg/namespace"
@@ -13,20 +14,20 @@ import (
 )
 
 var authConfigTypes = []string{
-	client.GithubConfigType,
+	//client.GithubConfigType,
 	client.LocalConfigType,
 	client.ActiveDirectoryConfigType,
-	client.AzureADConfigType,
-	client.OpenLdapConfigType,
-	client.FreeIpaConfigType,
-	client.PingConfigType,
-	client.ADFSConfigType,
-	client.KeyCloakConfigType,
-	client.OKTAConfigType,
-	client.ShibbolethConfigType,
-	client.GoogleOauthConfigType,
-	client.OIDCConfigType,
-	client.KeyCloakOIDCConfigType,
+	//client.AzureADConfigType,
+	//client.OpenLdapConfigType,
+	//client.FreeIpaConfigType,
+	//client.PingConfigType,
+	//client.ADFSConfigType,
+	//client.KeyCloakConfigType,
+	//client.OKTAConfigType,
+	//client.ShibbolethConfigType,
+	//client.GoogleOauthConfigType,
+	//client.OIDCConfigType,
+	//client.KeyCloakOIDCConfigType,
 }
 
 func SetupAuthConfig(ctx context.Context, management *config.ScaledContext, schemas *types.Schemas) {

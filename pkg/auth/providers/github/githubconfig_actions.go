@@ -10,6 +10,7 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
@@ -125,7 +126,7 @@ func (g *ghProvider) testAndApply(actionName string, action *types.Action, reque
 		return err
 	}
 
-	githubConfig.Enabled = githubConfigApplyInput.Enabled
+	githubConfig.Common.Enabled = githubConfigApplyInput.Enabled
 	err = g.saveGithubConfig(&githubConfig)
 	if err != nil {
 		return httperror.NewAPIError(httperror.ServerError, fmt.Sprintf("Failed to save github config: %v", err))

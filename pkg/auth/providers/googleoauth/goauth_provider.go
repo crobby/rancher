@@ -11,15 +11,6 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
-	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/auth/providers/common"
-	"github.com/rancher/rancher/pkg/auth/tokens"
-	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	publicclient "github.com/rancher/rancher/pkg/client/generated/management/v3public"
-	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/types/config"
-	"github.com/rancher/rancher/pkg/user"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -29,6 +20,16 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/auth/providers/common"
+	"github.com/rancher/rancher/pkg/auth/tokens"
+	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	publicclient "github.com/rancher/rancher/pkg/client/generated/management/v3public"
+	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/types/config"
+	"github.com/rancher/rancher/pkg/user"
 )
 
 const (
@@ -111,7 +112,7 @@ func (g *googleOauthProvider) loginUser(c context.Context, googleOAuthCredential
 	}
 
 	logrus.Debugf("[Google OAuth] loginuser: Checking user's access to Rancher")
-	allowed, err := g.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
+	allowed, err := g.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return userPrincipal, groupPrincipals, "", err
 	}
@@ -284,7 +285,7 @@ func (g *googleOauthProvider) CanAccessWithGroupProviders(userPrincipalID string
 		logrus.Errorf("Error fetching google OAuth config: %v", err)
 		return false, err
 	}
-	allowed, err := g.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := g.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -333,23 +334,23 @@ func (g *googleOauthProvider) saveGoogleOAuthConfigCR(config *v32.GoogleOauthCon
 	}
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = client.GoogleOauthConfigType
+	config.Common.Type = client.GoogleOauthConfigType
 	config.ObjectMeta = storedGoogleOAuthConfig.ObjectMeta
 
 	secretInfo := convert.ToString(config.OauthCredential)
 	field := strings.ToLower(client.GoogleOauthConfigFieldOauthCredential)
-	if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Type)); err != nil {
+	if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
-	config.OauthCredential = common.GetFullSecretName(config.Type, field)
+	config.OauthCredential = common.GetFullSecretName(config.Common.Type, field)
 
 	if config.ServiceAccountCredential != "" {
 		secretInfo = convert.ToString(config.ServiceAccountCredential)
 		field = strings.ToLower(client.GoogleOauthConfigFieldServiceAccountCredential)
-		if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Type)); err != nil {
+		if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Common.Type)); err != nil {
 			return err
 		}
-		config.ServiceAccountCredential = common.GetFullSecretName(config.Type, field)
+		config.ServiceAccountCredential = common.GetFullSecretName(config.Common.Type, field)
 	}
 
 	_, err = g.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
@@ -437,5 +438,5 @@ func (g *googleOauthProvider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !googleOauthConfig.Enabled, nil
+	return !googleOauthConfig.Common.Enabled, nil
 }

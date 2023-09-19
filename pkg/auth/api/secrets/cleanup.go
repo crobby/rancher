@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/tokens"
 	"github.com/rancher/rancher/pkg/catalog/utils"
 	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CleanupClientSecrets tries to delete common client secrets for each auth provider.
@@ -19,14 +20,16 @@ func CleanupClientSecrets(secretInterface corev1.SecretInterface, config *v3.Aut
 		return fmt.Errorf("cannot delete auth provider secrets if its config is nil")
 	}
 
-	fields, ok := TypeToFields[config.Type]
+	activeAuthConfigCommon, _ := common.ActiveProviderInConfig(*config)
+
+	fields, ok := TypeToFields[activeAuthConfigCommon.Type]
 	if !ok {
-		return fmt.Errorf("cannot delete auth provider %s because it's unknown to Rancher", config.Type)
+		return fmt.Errorf("cannot delete auth provider %s because it's unknown to Rancher", config.ProviderSpecific.ActiveDirectory.Common.Type)
 	}
 
 	var result error
 	for _, field := range fields {
-		err := common.DeleteSecret(secretInterface, config.Type, field)
+		err := common.DeleteSecret(secretInterface, activeAuthConfigCommon.Type, field)
 		if err != nil && !apierrors.IsNotFound(err) {
 			result = multierror.Append(result, err)
 		}
@@ -39,10 +42,10 @@ func CleanupClientSecrets(secretInterface corev1.SecretInterface, config *v3.Aut
 		}
 	}
 
-	if fieldsMap, ok := SubTypeToFields[config.Type]; ok {
+	if fieldsMap, ok := SubTypeToFields[activeAuthConfigCommon.Type]; ok {
 		for _, slice := range fieldsMap {
 			for _, field := range slice {
-				err := common.DeleteSecret(secretInterface, config.Type, field)
+				err := common.DeleteSecret(secretInterface, activeAuthConfigCommon.Type, field)
 				if err != nil && !apierrors.IsNotFound(err) {
 					result = multierror.Append(result, err)
 				}

@@ -31,11 +31,15 @@ func init() {
 }
 
 type Interface interface {
+	ADFSConfig() ADFSConfigController
 	APIService() APIServiceController
+	ActiveDirectoryConfig() ActiveDirectoryConfigController
 	ActiveDirectoryProvider() ActiveDirectoryProviderController
 	AuthConfig() AuthConfigController
+	AuthConfigCommon() AuthConfigCommonController
 	AuthProvider() AuthProviderController
 	AuthToken() AuthTokenController
+	AzureADConfig() AzureADConfigController
 	AzureADProvider() AzureADProviderController
 	Catalog() CatalogController
 	CatalogTemplate() CatalogTemplateController
@@ -57,16 +61,23 @@ type Interface interface {
 	EtcdBackup() EtcdBackupController
 	Feature() FeatureController
 	FleetWorkspace() FleetWorkspaceController
+	FreeIpaConfig() FreeIpaConfigController
 	FreeIpaProvider() FreeIpaProviderController
+	GithubConfig() GithubConfigController
 	GithubProvider() GithubProviderController
 	GlobalDns() GlobalDnsController
 	GlobalDnsProvider() GlobalDnsProviderController
 	GlobalRole() GlobalRoleController
 	GlobalRoleBinding() GlobalRoleBindingController
 	GoogleOAuthProvider() GoogleOAuthProviderController
+	GoogleOauthConfig() GoogleOauthConfigController
 	Group() GroupController
 	GroupMember() GroupMemberController
+	KeyCloakConfig() KeyCloakConfigController
+	KeyCloakOIDCConfig() KeyCloakOIDCConfigController
 	KontainerDriver() KontainerDriverController
+	LdapConfig() LdapConfigController
+	LocalConfig() LocalConfigController
 	LocalProvider() LocalProviderController
 	ManagedChart() ManagedChartController
 	MonitorMetric() MonitorMetricController
@@ -77,8 +88,13 @@ type Interface interface {
 	NodePool() NodePoolController
 	NodeTemplate() NodeTemplateController
 	Notifier() NotifierController
+	OIDCConfig() OIDCConfigController
 	OIDCProvider() OIDCProviderController
+	OKTAConfig() OKTAConfigController
+	OneProvider() OneProviderController
+	OpenLdapConfig() OpenLdapConfigController
 	OpenLdapProvider() OpenLdapProviderController
+	PingConfig() PingConfigController
 	PodSecurityAdmissionConfigurationTemplate() PodSecurityAdmissionConfigurationTemplateController
 	PodSecurityPolicyTemplate() PodSecurityPolicyTemplateController
 	PodSecurityPolicyTemplateProjectBinding() PodSecurityPolicyTemplateProjectBindingController
@@ -98,9 +114,11 @@ type Interface interface {
 	RkeK8sServiceOption() RkeK8sServiceOptionController
 	RkeK8sSystemImage() RkeK8sSystemImageController
 	RoleTemplate() RoleTemplateController
+	SamlConfig() SamlConfigController
 	SamlProvider() SamlProviderController
 	SamlToken() SamlTokenController
 	Setting() SettingController
+	ShibbolethConfig() ShibbolethConfigController
 	Template() TemplateController
 	TemplateContent() TemplateContentController
 	TemplateVersion() TemplateVersionController
@@ -119,8 +137,16 @@ type version struct {
 	controllerFactory controller.SharedControllerFactory
 }
 
+func (v *version) ADFSConfig() ADFSConfigController {
+	return generic.NewController[*v3.ADFSConfig, *v3.ADFSConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "ADFSConfig"}, "adfsconfigs", true, v.controllerFactory)
+}
+
 func (v *version) APIService() APIServiceController {
 	return generic.NewNonNamespacedController[*v3.APIService, *v3.APIServiceList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "APIService"}, "apiservices", v.controllerFactory)
+}
+
+func (v *version) ActiveDirectoryConfig() ActiveDirectoryConfigController {
+	return generic.NewController[*v3.ActiveDirectoryConfig, *v3.ActiveDirectoryConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "ActiveDirectoryConfig"}, "activedirectoryconfigs", true, v.controllerFactory)
 }
 
 func (v *version) ActiveDirectoryProvider() ActiveDirectoryProviderController {
@@ -131,12 +157,20 @@ func (v *version) AuthConfig() AuthConfigController {
 	return generic.NewNonNamespacedController[*v3.AuthConfig, *v3.AuthConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthConfig"}, "authconfigs", v.controllerFactory)
 }
 
+func (v *version) AuthConfigCommon() AuthConfigCommonController {
+	return generic.NewNonNamespacedController[*v3.AuthConfigCommon, *v3.AuthConfigCommonList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthConfigCommon"}, "authconfigcommons", v.controllerFactory)
+}
+
 func (v *version) AuthProvider() AuthProviderController {
 	return generic.NewNonNamespacedController[*v3.AuthProvider, *v3.AuthProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthProvider"}, "authproviders", v.controllerFactory)
 }
 
 func (v *version) AuthToken() AuthTokenController {
 	return generic.NewNonNamespacedController[*v3.AuthToken, *v3.AuthTokenList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthToken"}, "authtokens", v.controllerFactory)
+}
+
+func (v *version) AzureADConfig() AzureADConfigController {
+	return generic.NewController[*v3.AzureADConfig, *v3.AzureADConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AzureADConfig"}, "azureadconfigs", true, v.controllerFactory)
 }
 
 func (v *version) AzureADProvider() AzureADProviderController {
@@ -223,8 +257,16 @@ func (v *version) FleetWorkspace() FleetWorkspaceController {
 	return generic.NewNonNamespacedController[*v3.FleetWorkspace, *v3.FleetWorkspaceList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "FleetWorkspace"}, "fleetworkspaces", v.controllerFactory)
 }
 
+func (v *version) FreeIpaConfig() FreeIpaConfigController {
+	return generic.NewController[*v3.FreeIpaConfig, *v3.FreeIpaConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "FreeIpaConfig"}, "freeipaconfigs", true, v.controllerFactory)
+}
+
 func (v *version) FreeIpaProvider() FreeIpaProviderController {
 	return generic.NewNonNamespacedController[*v3.FreeIpaProvider, *v3.FreeIpaProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "FreeIpaProvider"}, "freeipaproviders", v.controllerFactory)
+}
+
+func (v *version) GithubConfig() GithubConfigController {
+	return generic.NewNonNamespacedController[*v3.GithubConfig, *v3.GithubConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "GithubConfig"}, "githubconfigs", v.controllerFactory)
 }
 
 func (v *version) GithubProvider() GithubProviderController {
@@ -251,6 +293,10 @@ func (v *version) GoogleOAuthProvider() GoogleOAuthProviderController {
 	return generic.NewNonNamespacedController[*v3.GoogleOAuthProvider, *v3.GoogleOAuthProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "GoogleOAuthProvider"}, "googleoauthproviders", v.controllerFactory)
 }
 
+func (v *version) GoogleOauthConfig() GoogleOauthConfigController {
+	return generic.NewController[*v3.GoogleOauthConfig, *v3.GoogleOauthConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "GoogleOauthConfig"}, "googleoauthconfigs", true, v.controllerFactory)
+}
+
 func (v *version) Group() GroupController {
 	return generic.NewNonNamespacedController[*v3.Group, *v3.GroupList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "Group"}, "groups", v.controllerFactory)
 }
@@ -259,8 +305,24 @@ func (v *version) GroupMember() GroupMemberController {
 	return generic.NewNonNamespacedController[*v3.GroupMember, *v3.GroupMemberList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "GroupMember"}, "groupmembers", v.controllerFactory)
 }
 
+func (v *version) KeyCloakConfig() KeyCloakConfigController {
+	return generic.NewController[*v3.KeyCloakConfig, *v3.KeyCloakConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "KeyCloakConfig"}, "keycloakconfigs", true, v.controllerFactory)
+}
+
+func (v *version) KeyCloakOIDCConfig() KeyCloakOIDCConfigController {
+	return generic.NewController[*v3.KeyCloakOIDCConfig, *v3.KeyCloakOIDCConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "KeyCloakOIDCConfig"}, "keycloakoidcconfigs", true, v.controllerFactory)
+}
+
 func (v *version) KontainerDriver() KontainerDriverController {
 	return generic.NewNonNamespacedController[*v3.KontainerDriver, *v3.KontainerDriverList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "KontainerDriver"}, "kontainerdrivers", v.controllerFactory)
+}
+
+func (v *version) LdapConfig() LdapConfigController {
+	return generic.NewController[*v3.LdapConfig, *v3.LdapConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "LdapConfig"}, "ldapconfigs", true, v.controllerFactory)
+}
+
+func (v *version) LocalConfig() LocalConfigController {
+	return generic.NewController[*v3.LocalConfig, *v3.LocalConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "LocalConfig"}, "localconfigs", true, v.controllerFactory)
 }
 
 func (v *version) LocalProvider() LocalProviderController {
@@ -303,12 +365,32 @@ func (v *version) Notifier() NotifierController {
 	return generic.NewController[*v3.Notifier, *v3.NotifierList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "Notifier"}, "notifiers", true, v.controllerFactory)
 }
 
+func (v *version) OIDCConfig() OIDCConfigController {
+	return generic.NewController[*v3.OIDCConfig, *v3.OIDCConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OIDCConfig"}, "oidcconfigs", true, v.controllerFactory)
+}
+
 func (v *version) OIDCProvider() OIDCProviderController {
 	return generic.NewNonNamespacedController[*v3.OIDCProvider, *v3.OIDCProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OIDCProvider"}, "oidcproviders", v.controllerFactory)
 }
 
+func (v *version) OKTAConfig() OKTAConfigController {
+	return generic.NewController[*v3.OKTAConfig, *v3.OKTAConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OKTAConfig"}, "oktaconfigs", true, v.controllerFactory)
+}
+
+func (v *version) OneProvider() OneProviderController {
+	return generic.NewController[*v3.OneProvider, *v3.OneProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OneProvider"}, "oneproviders", true, v.controllerFactory)
+}
+
+func (v *version) OpenLdapConfig() OpenLdapConfigController {
+	return generic.NewController[*v3.OpenLdapConfig, *v3.OpenLdapConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OpenLdapConfig"}, "openldapconfigs", true, v.controllerFactory)
+}
+
 func (v *version) OpenLdapProvider() OpenLdapProviderController {
 	return generic.NewNonNamespacedController[*v3.OpenLdapProvider, *v3.OpenLdapProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OpenLdapProvider"}, "openldapproviders", v.controllerFactory)
+}
+
+func (v *version) PingConfig() PingConfigController {
+	return generic.NewController[*v3.PingConfig, *v3.PingConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "PingConfig"}, "pingconfigs", true, v.controllerFactory)
 }
 
 func (v *version) PodSecurityAdmissionConfigurationTemplate() PodSecurityAdmissionConfigurationTemplateController {
@@ -387,6 +469,10 @@ func (v *version) RoleTemplate() RoleTemplateController {
 	return generic.NewNonNamespacedController[*v3.RoleTemplate, *v3.RoleTemplateList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "RoleTemplate"}, "roletemplates", v.controllerFactory)
 }
 
+func (v *version) SamlConfig() SamlConfigController {
+	return generic.NewController[*v3.SamlConfig, *v3.SamlConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "SamlConfig"}, "samlconfigs", true, v.controllerFactory)
+}
+
 func (v *version) SamlProvider() SamlProviderController {
 	return generic.NewNonNamespacedController[*v3.SamlProvider, *v3.SamlProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "SamlProvider"}, "samlproviders", v.controllerFactory)
 }
@@ -397,6 +483,10 @@ func (v *version) SamlToken() SamlTokenController {
 
 func (v *version) Setting() SettingController {
 	return generic.NewNonNamespacedController[*v3.Setting, *v3.SettingList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "Setting"}, "settings", v.controllerFactory)
+}
+
+func (v *version) ShibbolethConfig() ShibbolethConfigController {
+	return generic.NewController[*v3.ShibbolethConfig, *v3.ShibbolethConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "ShibbolethConfig"}, "shibbolethconfigs", true, v.controllerFactory)
 }
 
 func (v *version) Template() TemplateController {

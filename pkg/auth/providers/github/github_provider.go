@@ -11,6 +11,11 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
+	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/tokens"
@@ -21,10 +26,6 @@ import (
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -112,20 +113,20 @@ func (g *ghProvider) saveGithubConfig(config *v32.GithubConfig) error {
 	if err != nil {
 		return err
 	}
-	config.APIVersion = "management.cattle.io/v3"
-	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = client.GithubConfigType
-	config.ObjectMeta = storedGithubConfig.ObjectMeta
+	config.Common.APIVersion = "management.cattle.io/v3"
+	config.Common.Kind = v3.AuthConfigGroupVersionKind.Kind
+	config.Common.Type = client.GithubConfigType
+	config.Common.ObjectMeta = storedGithubConfig.Common.ObjectMeta
 
 	secretInfo := convert.ToString(config.ClientSecret)
 	field := strings.ToLower(client.GithubConfigFieldClientSecret)
-	if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Type)); err != nil {
+	if err := common.CreateOrUpdateSecrets(g.secrets, secretInfo, field, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
 
-	config.ClientSecret = common.GetFullSecretName(config.Type, field)
+	config.ClientSecret = common.GetFullSecretName(config.Common.Type, field)
 
-	_, err = g.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
+	_, err = g.authConfigs.ObjectClient().Update(config.Common.ObjectMeta.Name, config)
 	if err != nil {
 		return err
 	}
@@ -211,12 +212,12 @@ func (g *ghProvider) LoginUser(host string, githubCredential *v32.GithubLogin, c
 		groupPrincipals = append(groupPrincipals, groupPrincipal)
 	}
 
-	testAllowedPrincipals := config.AllowedPrincipalIDs
-	if test && config.AccessMode == "restricted" {
+	testAllowedPrincipals := config.Common.AllowedPrincipalIDs
+	if test && config.Common.AccessMode == "restricted" {
 		testAllowedPrincipals = append(testAllowedPrincipals, userPrincipal.Name)
 	}
 
-	allowed, err := g.userMGR.CheckAccess(config.AccessMode, testAllowedPrincipals, userPrincipal.Name, groupPrincipals)
+	allowed, err := g.userMGR.CheckAccess(config.Common.AccessMode, testAllowedPrincipals, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return v3.Principal{}, nil, "", err
 	}
@@ -394,7 +395,7 @@ func (g *ghProvider) CanAccessWithGroupProviders(userPrincipalID string, groupPr
 		logrus.Errorf("Error fetching github config: %v", err)
 		return false, err
 	}
-	allowed, err := g.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := g.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -418,5 +419,5 @@ func (g *ghProvider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !ghConfig.Enabled, nil
+	return !ghConfig.Common.Enabled, nil
 }

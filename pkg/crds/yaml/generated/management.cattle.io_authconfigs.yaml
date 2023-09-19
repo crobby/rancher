@@ -19,29 +19,99 @@ spec:
       openAPIV3Schema:
         description: AuthConfig holds the configuration information for an Auth Provider.
         properties:
-          accessMode:
-            description: AccessMode refers to whether or not all users from the Auth
-              Provider can login or if they need to be added to the AllowedPrincipalIDs
-              list to be able to login.
-            enum:
-            - required
-            - restricted
-            - unrestricted
-            type: string
-          allowedPrincipalIds:
-            description: AllowedPrincipalIDs is the list of principalIDs that are
-              allowed to login via this Auth Provider.
-            items:
-              type: string
-            type: array
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
-          enabled:
-            description: Enabled If true, this Auth Provider is enabled.
-            type: boolean
+          inline:
+            properties:
+              accessMode:
+                description: AccessMode refers to whether or not all users from the
+                  Auth Provider can login or if they need to be added to the AllowedPrincipalIDs
+                  list to be able to login.
+                enum:
+                - required
+                - restricted
+                - unrestricted
+                type: string
+              allowedPrincipalIds:
+                description: AllowedPrincipalIDs is the list of principalIDs that
+                  are allowed to login via this Auth Provider.
+                items:
+                  type: string
+                type: array
+              apiVersion:
+                description: 'APIVersion defines the versioned schema of this representation
+                  of an object. Servers should convert recognized schemas to the latest
+                  internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                type: string
+              enabled:
+                description: Enabled If true, this Auth Provider is enabled.
+                type: boolean
+              kind:
+                description: 'Kind is a string value representing the REST resource
+                  this object represents. Servers may infer this from the endpoint
+                  the client submits requests to. Cannot be updated. In CamelCase.
+                  More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                type: string
+              metadata:
+                description: 'Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.'
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+              status:
+                description: Status refers to the list of AuthConfigConditions that
+                  apply to this Auth Provider.
+                properties:
+                  conditions:
+                    description: AuthConfigStatus represents an assortment of statuses
+                      that are related to a given Auth Provider.
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          description: Last time the condition transitioned from one
+                            status to another
+                          type: string
+                        lastUpdateTime:
+                          description: Last time the condition was updated
+                          type: string
+                        message:
+                          description: Human-readable message indicating details about
+                            last transition
+                          type: string
+                        reason:
+                          description: The reason for the condition's last transition
+                          type: string
+                        status:
+                          description: Status of condition (one of True, False, Unknown)
+                          type: string
+                        type:
+                          description: Type of condition
+                          type: string
+                      required:
+                      - status
+                      - type
+                      type: object
+                    type: array
+                type: object
+              type:
+                description: Type refers to which Auth Provider this AuthConfig represents.
+                type: string
+            required:
+            - type
+            type: object
           kind:
             description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
@@ -49,46 +119,6 @@ spec:
             type: string
           metadata:
             type: object
-          status:
-            description: Status refers to the list of AuthConfigConditions that apply
-              to this Auth Provider.
-            properties:
-              conditions:
-                description: AuthConfigStatus represents an assortment of statuses
-                  that are related to a given Auth Provider.
-                items:
-                  properties:
-                    lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another
-                      type: string
-                    lastUpdateTime:
-                      description: Last time the condition was updated
-                      type: string
-                    message:
-                      description: Human-readable message indicating details about
-                        last transition
-                      type: string
-                    reason:
-                      description: The reason for the condition's last transition
-                      type: string
-                    status:
-                      description: Status of condition (one of True, False, Unknown)
-                      type: string
-                    type:
-                      description: Type of condition
-                      type: string
-                  required:
-                  - status
-                  - type
-                  type: object
-                type: array
-            type: object
-          type:
-            description: Type refers to which Auth Provider this AuthConfig represents.
-            type: string
-        required:
-        - type
         type: object
     served: true
     storage: true

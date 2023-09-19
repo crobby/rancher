@@ -8,13 +8,14 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/rancher/norman/condition"
 	"github.com/rancher/norman/objectclient"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	apimgmtv3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"github.com/rancher/rancher/pkg/namespace"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -24,11 +25,12 @@ const (
 
 // syncAuthConfig syncs the authentication config and removes/migrates secrets as needed.
 func (h *handler) syncAuthConfig(_ string, authConfig *apimgmtv3.AuthConfig) (runtime.Object, error) {
-	if authConfig == nil || !authConfig.Enabled || apimgmtv3.AuthConfigConditionSecretsMigrated.IsTrue(authConfig) {
+	activeAuthConfigCommon, _ := common.ActiveProviderInConfig(*authConfig)
+	if authConfig == nil || !activeAuthConfigCommon.Enabled || apimgmtv3.AuthConfigConditionSecretsMigrated.IsTrue(authConfig) {
 		return authConfig, nil
 	}
 
-	if authConfig.Type != client.ShibbolethConfigType {
+	if activeAuthConfigCommon.Type != client.ShibbolethConfigType {
 		unstructuredConfig, err := getUnstructuredAuthConfig(h.authConfigs, authConfig)
 		if err != nil {
 			return nil, err
@@ -92,7 +94,7 @@ func (h *handler) migrateShibbolethSecrets(unstructuredConfig map[string]any) (*
 		return shibbConfig, nil
 	}
 
-	secretName := fmt.Sprintf("%s-%s", strings.ToLower(shibbConfig.Type), serviceAccountPasswordFieldName)
+	secretName := fmt.Sprintf("%s-%s", strings.ToLower(shibbConfig.Common.Type), serviceAccountPasswordFieldName)
 	lowercaseFieldName := strings.ToLower(serviceAccountPasswordFieldName)
 
 	// cannot use createOrUpdateSecretForCredential because the credential is saved in the secret with a key of
@@ -111,7 +113,7 @@ func (h *handler) migrateShibbolethSecrets(unstructuredConfig map[string]any) (*
 		return nil, err
 	}
 
-	lowerType := strings.ToLower(shibbConfig.Type)
+	lowerType := strings.ToLower(shibbConfig.Common.Type)
 	fullSecretName := common.GetFullSecretName(lowerType, serviceAccountPasswordFieldName)
 	shibbConfig.OpenLdapConfig.ServiceAccountPassword = fullSecretName
 

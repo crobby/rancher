@@ -2,11 +2,11 @@ package common
 
 import (
 	"github.com/rancher/norman/types"
-	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 )
 
 func HandleCommonAction(actionName string, action *types.Action, request *types.APIContext, authConfigName string, authConfigs v3.AuthConfigInterface) (bool, error) {
@@ -18,8 +18,8 @@ func HandleCommonAction(actionName string, action *types.Action, request *types.
 		}
 		u, _ := o.(runtime.Unstructured)
 		config := u.UnstructuredContent()
-		if e, ok := config[client.AuthConfigFieldEnabled].(bool); ok && e {
-			config[client.AuthConfigFieldEnabled] = false
+		if e, ok := config["Enabled"].(bool); ok && e {
+			config["Enabled"] = false
 			logrus.Infof("Disabling auth provider %s from the action.", authConfigName)
 			_, err = authConfigs.ObjectClient().Update(authConfigName, o)
 			return true, err

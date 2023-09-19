@@ -33,6 +33,8 @@ type Client struct {
 	SamlToken                                 SamlTokenOperations
 	Principal                                 PrincipalOperations
 	User                                      UserOperations
+	AuthConfigCommon                          AuthConfigCommonOperations
+	OneProvider                               OneProviderOperations
 	AuthConfig                                AuthConfigOperations
 	LdapConfig                                LdapConfigOperations
 	Token                                     TokenOperations
@@ -107,6 +109,8 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.SamlToken = newSamlTokenClient(client)
 	client.Principal = newPrincipalClient(client)
 	client.User = newUserClient(client)
+	client.AuthConfigCommon = newAuthConfigCommonClient(client)
+	client.OneProvider = newOneProviderClient(client)
 	client.AuthConfig = newAuthConfigClient(client)
 	client.LdapConfig = newLdapConfigClient(client)
 	client.Token = newTokenClient(client)

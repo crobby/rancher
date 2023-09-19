@@ -224,7 +224,7 @@ func (p *adProvider) CanAccessWithGroupProviders(userPrincipalID string, groupPr
 		logrus.Errorf("Error fetching AD config: %v", err)
 		return false, err
 	}
-	allowed, err := p.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := p.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -265,5 +265,5 @@ func (p *adProvider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !adConfig.Enabled, nil
+	return !adConfig.Common.Enabled, nil
 }

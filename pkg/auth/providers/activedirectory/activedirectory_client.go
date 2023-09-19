@@ -12,10 +12,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types/slice"
-	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 )
 
 func (p *adProvider) loginUser(adCredential *v32.BasicLogin, config *v32.ActiveDirectoryConfig, caPool *x509.CertPool, testServiceAccountBind bool) (v3.Principal, []v3.Principal, error) {
@@ -79,7 +80,7 @@ func (p *adProvider) loginUser(adCredential *v32.BasicLogin, config *v32.ActiveD
 		return v3.Principal{}, nil, err
 	}
 
-	allowed, err := p.userMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
+	allowed, err := p.userMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return v3.Principal{}, nil, err
 	}
@@ -270,7 +271,7 @@ func (p *adProvider) getGroupPrincipalsFromSearch(searchBase string, filter stri
 	err := lConn.Bind(serviceAccountUsername, config.ServiceAccountPassword)
 
 	if err != nil {
-		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Enabled {
+		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Common.Enabled {
 			// If bind fails because service account password has changed, just return identities formed from groups in `memberOf`
 			groupList := []v3.Principal{}
 			for _, dn := range groupDN {
@@ -352,7 +353,7 @@ func (p *adProvider) getPrincipal(distinguishedName string, scope string, config
 	err = lConn.Bind(serviceAccountUsername, config.ServiceAccountPassword)
 
 	if err != nil {
-		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Enabled {
+		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) && config.Common.Enabled {
 			var kind string
 			if strings.EqualFold(UserScope, scope) {
 				kind = "user"

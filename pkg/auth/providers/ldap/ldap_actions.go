@@ -7,13 +7,14 @@ import (
 	"github.com/rancher/norman/api/handler"
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
+	"github.com/sirupsen/logrus"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/providers/common/ldap"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	managementschema "github.com/rancher/rancher/pkg/schemas/management.cattle.io/v3"
-	"github.com/sirupsen/logrus"
 )
 
 func (p *ldapProvider) formatter(apiContext *types.APIContext, resource *types.RawResource) {
@@ -91,7 +92,7 @@ func (p *ldapProvider) testAndApply(actionName string, action *types.Action, req
 	}
 
 	//if this works, save LDAPConfig CR adding enabled flag
-	config.Enabled = configApplyInput.Enabled
+	config.Common.Enabled = configApplyInput.Common.Enabled
 	err = p.saveLDAPConfig(config)
 	if err != nil {
 		return httperror.NewAPIError(httperror.ServerError, fmt.Sprintf("Failed to save %s config: %v", p.providerName, err))
@@ -115,20 +116,20 @@ func (p *ldapProvider) saveLDAPConfig(config *v3.LdapConfig) error {
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
 	if p.providerName == "openldap" {
-		config.Type = client.OpenLdapConfigType
+		config.Common.Type = client.OpenLdapConfigType
 	} else {
-		config.Type = client.FreeIpaConfigType
+		config.Common.Type = client.FreeIpaConfigType
 	}
 
 	config.ObjectMeta = storedConfig.ObjectMeta
 
 	field := strings.ToLower(client.LdapConfigFieldServiceAccountPassword)
 	if err := common.CreateOrUpdateSecrets(p.secrets, config.ServiceAccountPassword,
-		field, strings.ToLower(config.Type)); err != nil {
+		field, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
 
-	config.ServiceAccountPassword = common.GetFullSecretName(config.Type, field)
+	config.ServiceAccountPassword = common.GetFullSecretName(config.Common.Type, field)
 
 	logrus.Debugf("updating %s config", p.providerName)
 	_, err = p.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)

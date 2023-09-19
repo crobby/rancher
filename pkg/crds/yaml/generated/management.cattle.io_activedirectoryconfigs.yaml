@@ -1,0 +1,150 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.12.0
+  name: activedirectoryconfigs.management.cattle.io
+spec:
+  group: management.cattle.io
+  names:
+    kind: ActiveDirectoryConfig
+    listKind: ActiveDirectoryConfigList
+    plural: activedirectoryconfigs
+    singular: activedirectoryconfig
+  scope: Namespaced
+  versions:
+  - name: v3
+    schema:
+      openAPIV3Schema:
+        properties:
+          accessMode:
+            description: AccessMode refers to whether or not all users from the Auth
+              Provider can login or if they need to be added to the AllowedPrincipalIDs
+              list to be able to login.
+            enum:
+            - required
+            - restricted
+            - unrestricted
+            type: string
+          allowedPrincipalIds:
+            description: AllowedPrincipalIDs is the list of principalIDs that are
+              allowed to login via this Auth Provider.
+            items:
+              type: string
+            type: array
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          certificate:
+            type: string
+          connectionTimeout:
+            format: int64
+            type: integer
+          defaultLoginDomain:
+            type: string
+          enabled:
+            description: Enabled If true, this Auth Provider is enabled.
+            type: boolean
+          groupDNAttribute:
+            type: string
+          groupMemberMappingAttribute:
+            type: string
+          groupMemberUserAttribute:
+            type: string
+          groupNameAttribute:
+            type: string
+          groupObjectClass:
+            type: string
+          groupSearchAttribute:
+            type: string
+          groupSearchBase:
+            type: string
+          groupSearchFilter:
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          nestedGroupMembershipEnabled:
+            type: boolean
+          port:
+            format: int64
+            type: integer
+          servers:
+            items:
+              type: string
+            type: array
+          serviceAccountPassword:
+            type: string
+          serviceAccountUsername:
+            type: string
+          starttls:
+            type: boolean
+          status:
+            description: Status refers to the list of AuthConfigConditions that apply
+              to this Auth Provider.
+            properties:
+              conditions:
+                description: AuthConfigStatus represents an assortment of statuses
+                  that are related to a given Auth Provider.
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another
+                      type: string
+                    lastUpdateTime:
+                      description: Last time the condition was updated
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition
+                      type: string
+                    status:
+                      description: Status of condition (one of True, False, Unknown)
+                      type: string
+                    type:
+                      description: Type of condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+            type: object
+          tls:
+            type: boolean
+          type:
+            description: Type refers to which Auth Provider this AuthConfig represents.
+            type: string
+          userDisabledBitMask:
+            format: int64
+            type: integer
+          userEnabledAttribute:
+            type: string
+          userLoginAttribute:
+            type: string
+          userNameAttribute:
+            type: string
+          userObjectClass:
+            type: string
+          userSearchAttribute:
+            type: string
+          userSearchBase:
+            type: string
+          userSearchFilter:
+            type: string
+        required:
+        - type
+        type: object
+    served: true
+    storage: true

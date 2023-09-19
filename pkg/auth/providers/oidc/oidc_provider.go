@@ -12,6 +12,11 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	"github.com/rancher/rancher/pkg/auth/tokens"
@@ -21,10 +26,6 @@ import (
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -106,7 +107,7 @@ func (o *OpenIDCProvider) LoginUser(ctx context.Context, oauthLoginInfo *v32.OID
 	groupPrincipals = o.getGroupsFromClaimInfo(userClaimInfo)
 
 	logrus.Debugf("[generic oidc] loginuser: checking user's access to rancher")
-	allowed, err := o.UserMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
+	allowed, err := o.UserMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return userPrincipal, groupPrincipals, "", userClaimInfo, err
 	}
@@ -222,7 +223,7 @@ func (o *OpenIDCProvider) CanAccessWithGroupProviders(userPrincipalID string, gr
 		logrus.Errorf("[generic oidc] canAccessWithGroupProviders: error fetching OIDCConfig: %v", err)
 		return false, err
 	}
-	allowed, err := o.UserMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := o.UserMGR.CheckAccess(config.Common.AccessMode, config.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -282,22 +283,22 @@ func (o *OpenIDCProvider) saveOIDCConfig(config *v32.OIDCConfig) error {
 	}
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = o.Type
+	config.Common.Type = o.Type
 	config.ObjectMeta = storedOidcConfig.ObjectMeta
 
 	if config.PrivateKey != "" {
 		privateKeyField := strings.ToLower(client.OIDCConfigFieldPrivateKey)
-		if err = common.CreateOrUpdateSecrets(o.Secrets, config.PrivateKey, privateKeyField, strings.ToLower(config.Type)); err != nil {
+		if err = common.CreateOrUpdateSecrets(o.Secrets, config.PrivateKey, privateKeyField, strings.ToLower(config.Common.Type)); err != nil {
 			return err
 		}
-		config.PrivateKey = common.GetFullSecretName(config.Type, privateKeyField)
+		config.PrivateKey = common.GetFullSecretName(config.Common.Type, privateKeyField)
 	}
 
 	secretField := strings.ToLower(client.OIDCConfigFieldClientSecret)
-	if err := common.CreateOrUpdateSecrets(o.Secrets, convert.ToString(config.ClientSecret), secretField, strings.ToLower(config.Type)); err != nil {
+	if err := common.CreateOrUpdateSecrets(o.Secrets, convert.ToString(config.ClientSecret), secretField, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
-	config.ClientSecret = common.GetFullSecretName(config.Type, secretField)
+	config.ClientSecret = common.GetFullSecretName(config.Common.Type, secretField)
 
 	logrus.Debugf("[generic oidc] saveOIDCConfig: updating config")
 	_, err = o.AuthConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
@@ -475,5 +476,5 @@ func (o *OpenIDCProvider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !oidcConfig.Enabled, nil
+	return !oidcConfig.Common.Enabled, nil
 }

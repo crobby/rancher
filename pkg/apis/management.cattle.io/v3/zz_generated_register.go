@@ -28,11 +28,15 @@ import (
 )
 
 var (
+	ADFSConfigResourceName                                = "adfsconfigs"
 	APIServiceResourceName                                = "apiservices"
+	ActiveDirectoryConfigResourceName                     = "activedirectoryconfigs"
 	ActiveDirectoryProviderResourceName                   = "activedirectoryproviders"
 	AuthConfigResourceName                                = "authconfigs"
+	AuthConfigCommonResourceName                          = "authconfigcommons"
 	AuthProviderResourceName                              = "authproviders"
 	AuthTokenResourceName                                 = "authtokens"
+	AzureADConfigResourceName                             = "azureadconfigs"
 	AzureADProviderResourceName                           = "azureadproviders"
 	CatalogResourceName                                   = "catalogs"
 	CatalogTemplateResourceName                           = "catalogtemplates"
@@ -54,16 +58,23 @@ var (
 	EtcdBackupResourceName                                = "etcdbackups"
 	FeatureResourceName                                   = "features"
 	FleetWorkspaceResourceName                            = "fleetworkspaces"
+	FreeIpaConfigResourceName                             = "freeipaconfigs"
 	FreeIpaProviderResourceName                           = "freeipaproviders"
+	GithubConfigResourceName                              = "githubconfigs"
 	GithubProviderResourceName                            = "githubproviders"
 	GlobalDnsResourceName                                 = "globaldnses"
 	GlobalDnsProviderResourceName                         = "globaldnsproviders"
 	GlobalRoleResourceName                                = "globalroles"
 	GlobalRoleBindingResourceName                         = "globalrolebindings"
 	GoogleOAuthProviderResourceName                       = "googleoauthproviders"
+	GoogleOauthConfigResourceName                         = "googleoauthconfigs"
 	GroupResourceName                                     = "groups"
 	GroupMemberResourceName                               = "groupmembers"
+	KeyCloakConfigResourceName                            = "keycloakconfigs"
+	KeyCloakOIDCConfigResourceName                        = "keycloakoidcconfigs"
 	KontainerDriverResourceName                           = "kontainerdrivers"
+	LdapConfigResourceName                                = "ldapconfigs"
+	LocalConfigResourceName                               = "localconfigs"
 	LocalProviderResourceName                             = "localproviders"
 	ManagedChartResourceName                              = "managedcharts"
 	MonitorMetricResourceName                             = "monitormetrics"
@@ -74,8 +85,13 @@ var (
 	NodePoolResourceName                                  = "nodepools"
 	NodeTemplateResourceName                              = "nodetemplates"
 	NotifierResourceName                                  = "notifiers"
+	OIDCConfigResourceName                                = "oidcconfigs"
 	OIDCProviderResourceName                              = "oidcproviders"
+	OKTAConfigResourceName                                = "oktaconfigs"
+	OneProviderResourceName                               = "oneproviders"
+	OpenLdapConfigResourceName                            = "openldapconfigs"
 	OpenLdapProviderResourceName                          = "openldapproviders"
+	PingConfigResourceName                                = "pingconfigs"
 	PodSecurityAdmissionConfigurationTemplateResourceName = "podsecurityadmissionconfigurationtemplates"
 	PodSecurityPolicyTemplateResourceName                 = "podsecuritypolicytemplates"
 	PodSecurityPolicyTemplateProjectBindingResourceName   = "podsecuritypolicytemplateprojectbindings"
@@ -95,9 +111,11 @@ var (
 	RkeK8sServiceOptionResourceName                       = "rkek8sserviceoptions"
 	RkeK8sSystemImageResourceName                         = "rkek8ssystemimages"
 	RoleTemplateResourceName                              = "roletemplates"
+	SamlConfigResourceName                                = "samlconfigs"
 	SamlProviderResourceName                              = "samlproviders"
 	SamlTokenResourceName                                 = "samltokens"
 	SettingResourceName                                   = "settings"
+	ShibbolethConfigResourceName                          = "shibbolethconfigs"
 	TemplateResourceName                                  = "templates"
 	TemplateContentResourceName                           = "templatecontents"
 	TemplateVersionResourceName                           = "templateversions"
@@ -127,16 +145,24 @@ var (
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
+		&ADFSConfig{},
+		&ADFSConfigList{},
 		&APIService{},
 		&APIServiceList{},
+		&ActiveDirectoryConfig{},
+		&ActiveDirectoryConfigList{},
 		&ActiveDirectoryProvider{},
 		&ActiveDirectoryProviderList{},
 		&AuthConfig{},
 		&AuthConfigList{},
+		&AuthConfigCommon{},
+		&AuthConfigCommonList{},
 		&AuthProvider{},
 		&AuthProviderList{},
 		&AuthToken{},
 		&AuthTokenList{},
+		&AzureADConfig{},
+		&AzureADConfigList{},
 		&AzureADProvider{},
 		&AzureADProviderList{},
 		&Catalog{},
@@ -179,8 +205,12 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&FeatureList{},
 		&FleetWorkspace{},
 		&FleetWorkspaceList{},
+		&FreeIpaConfig{},
+		&FreeIpaConfigList{},
 		&FreeIpaProvider{},
 		&FreeIpaProviderList{},
+		&GithubConfig{},
+		&GithubConfigList{},
 		&GithubProvider{},
 		&GithubProviderList{},
 		&GlobalDns{},
@@ -193,12 +223,22 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&GlobalRoleBindingList{},
 		&GoogleOAuthProvider{},
 		&GoogleOAuthProviderList{},
+		&GoogleOauthConfig{},
+		&GoogleOauthConfigList{},
 		&Group{},
 		&GroupList{},
 		&GroupMember{},
 		&GroupMemberList{},
+		&KeyCloakConfig{},
+		&KeyCloakConfigList{},
+		&KeyCloakOIDCConfig{},
+		&KeyCloakOIDCConfigList{},
 		&KontainerDriver{},
 		&KontainerDriverList{},
+		&LdapConfig{},
+		&LdapConfigList{},
+		&LocalConfig{},
+		&LocalConfigList{},
 		&LocalProvider{},
 		&LocalProviderList{},
 		&ManagedChart{},
@@ -219,10 +259,20 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&NodeTemplateList{},
 		&Notifier{},
 		&NotifierList{},
+		&OIDCConfig{},
+		&OIDCConfigList{},
 		&OIDCProvider{},
 		&OIDCProviderList{},
+		&OKTAConfig{},
+		&OKTAConfigList{},
+		&OneProvider{},
+		&OneProviderList{},
+		&OpenLdapConfig{},
+		&OpenLdapConfigList{},
 		&OpenLdapProvider{},
 		&OpenLdapProviderList{},
+		&PingConfig{},
+		&PingConfigList{},
 		&PodSecurityAdmissionConfigurationTemplate{},
 		&PodSecurityAdmissionConfigurationTemplateList{},
 		&PodSecurityPolicyTemplate{},
@@ -261,12 +311,16 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&RkeK8sSystemImageList{},
 		&RoleTemplate{},
 		&RoleTemplateList{},
+		&SamlConfig{},
+		&SamlConfigList{},
 		&SamlProvider{},
 		&SamlProviderList{},
 		&SamlToken{},
 		&SamlTokenList{},
 		&Setting{},
 		&SettingList{},
+		&ShibbolethConfig{},
+		&ShibbolethConfigList{},
 		&Template{},
 		&TemplateList{},
 		&TemplateContent{},

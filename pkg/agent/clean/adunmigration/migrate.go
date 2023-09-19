@@ -174,7 +174,7 @@ func UnmigrateAdGUIDUsers(clientConfig *restclient.Config, dryRun bool, deleteMi
 		}(sc, activedirectory.StatusMigrationField)
 
 		// Early bail: if the AD configuration is disabled, then we're done! Update the configmap right now and exit.
-		if !adConfig.Enabled {
+		if !adConfig.Common.Enabled {
 			logrus.Infof("[%v] during unmigration, found that Active Directory is not enabled. nothing to do", migrateAdUserOperation)
 			finalStatus = activedirectory.StatusMigrationFinished
 			return nil

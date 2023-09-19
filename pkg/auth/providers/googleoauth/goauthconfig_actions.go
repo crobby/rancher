@@ -8,11 +8,12 @@ import (
 
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
 	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 func (g *googleOauthProvider) formatter(apiContext *types.APIContext, resource *types.RawResource) {
@@ -103,7 +104,7 @@ func (g *googleOauthProvider) testAndApply(actionName string, action *types.Acti
 		return err
 	}
 
-	googleOAuthConfig.Enabled = googleOAuthConfigApplyInput.Enabled
+	googleOAuthConfig.Common.Enabled = googleOAuthConfigApplyInput.Enabled
 	err = g.saveGoogleOAuthConfigCR(&googleOAuthConfig)
 	if err != nil {
 		return httperror.NewAPIError(httperror.ServerError, fmt.Sprintf("testAndApply: Failed to save google oauth config: %v", err))

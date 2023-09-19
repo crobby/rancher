@@ -7,6 +7,8 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 )
 
 // Decode will decode to the output structure by creating a custom decoder
@@ -43,4 +45,11 @@ func stringToK8sTimeHookFunc() mapstructure.DecodeHookFunc {
 		stdTime, err := time.Parse(time.RFC3339, data.(string))
 		return metav1.Time{Time: stdTime}, err
 	}
+}
+
+func ActiveProviderInConfig(config v3.AuthConfig) (*v3.AuthConfigCommon, error) {
+	if &config.ProviderSpecific.ActiveDirectory != nil {
+		return &config.ProviderSpecific.ActiveDirectory.Common, nil
+	}
+	return &v3.AuthConfigCommon{}, nil
 }

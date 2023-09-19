@@ -11,6 +11,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
+	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/azure/clients"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
@@ -22,10 +27,6 @@ import (
 	"github.com/rancher/rancher/pkg/settings"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -209,12 +210,12 @@ func (ap *Provider) loginUser(config *v32.AzureADConfig, azureCredential *v32.Az
 	if err != nil {
 		return v3.Principal{}, nil, "", err
 	}
-	testAllowedPrincipals := config.AllowedPrincipalIDs
-	if test && config.AccessMode == "restricted" {
+	testAllowedPrincipals := config.Common.AllowedPrincipalIDs
+	if test && config.Common.AccessMode == "restricted" {
 		testAllowedPrincipals = append(testAllowedPrincipals, userPrincipal.Name)
 	}
 
-	allowed, err := ap.userMGR.CheckAccess(config.AccessMode, testAllowedPrincipals, userPrincipal.Name, groupPrincipals)
+	allowed, err := ap.userMGR.CheckAccess(config.Common.AccessMode, testAllowedPrincipals, userPrincipal.Name, groupPrincipals)
 	if err != nil {
 		return v3.Principal{}, nil, "", err
 	}
@@ -289,7 +290,7 @@ func (ap *Provider) saveAzureConfigK8s(config *v32.AzureADConfig) error {
 	}
 	config.APIVersion = "management.cattle.io/v3"
 	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Type = client.AzureADConfigType
+	config.Common.Type = client.AzureADConfigType
 	config.ObjectMeta = storedAzureConfig.ObjectMeta
 
 	// Ensure the passed in config's annotations are applied to the object to be persisted.
@@ -301,11 +302,11 @@ func (ap *Provider) saveAzureConfigK8s(config *v32.AzureADConfig) error {
 	}
 
 	field := strings.ToLower(client.AzureADConfigFieldApplicationSecret)
-	if err := common.CreateOrUpdateSecrets(ap.secrets, config.ApplicationSecret, field, strings.ToLower(config.Type)); err != nil {
+	if err := common.CreateOrUpdateSecrets(ap.secrets, config.ApplicationSecret, field, strings.ToLower(config.Common.Type)); err != nil {
 		return err
 	}
 
-	config.ApplicationSecret = common.GetFullSecretName(config.Type, field)
+	config.ApplicationSecret = common.GetFullSecretName(config.Common.Type, field)
 
 	logrus.Debugf("updating AzureADConfig")
 	_, err = ap.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
@@ -448,7 +449,7 @@ func (ap *Provider) CanAccessWithGroupProviders(userPrincipalID string, groupPri
 		logrus.Errorf("Error fetching azure config: %v", err)
 		return false, err
 	}
-	allowed, err := ap.userMGR.CheckAccess(cfg.AccessMode, cfg.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	allowed, err := ap.userMGR.CheckAccess(cfg.Common.AccessMode, cfg.Common.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
 	if err != nil {
 		return false, err
 	}
@@ -493,5 +494,5 @@ func (ap *Provider) IsDisabledProvider() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !azureConfig.Enabled, nil
+	return !azureConfig.Common.Enabled, nil
 }

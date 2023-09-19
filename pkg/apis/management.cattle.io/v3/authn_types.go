@@ -177,6 +177,21 @@ type AuthConfig struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// ProviderSpecific is the object that contains fields specific to a given provider
+	ProviderSpecific OneProvider `json:",inline"`
+}
+
+// +genclient
+// +kubebuilder:resource:scope=Cluster
+// +genclient:nonNamespaced
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AuthConfigCommon struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
 	// Type refers to which Auth Provider this AuthConfig represents.
 	Type string `json:"type" norman:"noupdate"`
 
@@ -195,6 +210,19 @@ type AuthConfig struct {
 	// Status refers to the list of AuthConfigConditions that apply to this Auth Provider.
 	// +optional
 	Status AuthConfigStatus `json:"status,omitempty"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// OneProvider defines a field that can have one of four possible choices.
+type OneProvider struct {
+	// You can use TypeMeta and ObjectMeta if needed for each choice.
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	ActiveDirectory ActiveDirectoryConfig `json:"inline,omitempty"`
+	Local           LocalConfig           `json:"inline,omitempty"`
 }
 
 type AuthConfigStatus struct {
@@ -237,10 +265,14 @@ type SamlToken struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type LocalConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 }
 
 // +genclient
@@ -249,7 +281,10 @@ type LocalConfig struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type GithubConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	Hostname     string `json:"hostname,omitempty" norman:"default=github.com" norman:"required"`
 	TLS          bool   `json:"tls,omitempty" norman:"notnullable,default=true" norman:"required"`
@@ -271,10 +306,14 @@ type GithubConfigApplyInput struct {
 	Enabled      bool         `json:"enabled,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type GoogleOauthConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	OauthCredential              string `json:"oauthCredential,omitempty" norman:"required,type=password,notnullable"`
 	ServiceAccountCredential     string `json:"serviceAccountCredential,omitempty" norman:"required,type=password,notnullable"`
@@ -294,10 +333,14 @@ type GoogleOauthConfigApplyInput struct {
 	Enabled           bool              `json:"enabled,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AzureADConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	Endpoint          string `json:"endpoint,omitempty" norman:"default=https://login.microsoftonline.com/,required,notnullable"`
 	GraphEndpoint     string `json:"graphEndpoint,omitempty" norman:"required,notnullable"`
@@ -318,10 +361,14 @@ type AzureADConfigApplyInput struct {
 	Code   string        `json:"code,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ActiveDirectoryConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	Servers                      []string `json:"servers,omitempty"                     norman:"type=array[string],required"`
 	Port                         int64    `json:"port,omitempty"                        norman:"default=389"`
@@ -387,10 +434,14 @@ type LdapFields struct {
 	NestedGroupMembershipEnabled    bool     `json:"nestedGroupMembershipEnabled"              norman:"default=false"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type LdapConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	LdapFields `json:",inline" mapstructure:",squash"`
 }
 
@@ -400,7 +451,14 @@ type LdapTestAndApplyInput struct {
 	Password   string `json:"password" norman:"type=password,required"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type OpenLdapConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	LdapConfig `json:",inline" mapstructure:",squash"`
 }
 
@@ -408,7 +466,14 @@ type OpenLdapTestAndApplyInput struct {
 	LdapTestAndApplyInput `json:",inline" mapstructure:",squash"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type FreeIpaConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	LdapConfig `json:",inline" mapstructure:",squash"`
 }
 
@@ -416,10 +481,14 @@ type FreeIpaTestAndApplyInput struct {
 	LdapTestAndApplyInput `json:",inline" mapstructure:",squash"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type SamlConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	IDPMetadataContent string `json:"idpMetadataContent" norman:"required"`
 	SpCert             string `json:"spCert"             norman:"required"`
@@ -440,24 +509,59 @@ type SamlConfigTestOutput struct {
 	IdpRedirectURL string `json:"idpRedirectUrl"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type PingConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	SamlConfig `json:",inline" mapstructure:",squash"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ADFSConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	SamlConfig `json:",inline" mapstructure:",squash"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type KeyCloakConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	SamlConfig `json:",inline" mapstructure:",squash"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type OKTAConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common         AuthConfigCommon `json:",inline"`
 	SamlConfig     `json:",inline" mapstructure:",squash"`
 	OpenLdapConfig LdapFields `json:"openLdapConfig" mapstructure:",squash"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type ShibbolethConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common         AuthConfigCommon `json:",inline"`
 	SamlConfig     `json:",inline" mapstructure:",squash"`
 	OpenLdapConfig LdapFields `json:"openLdapConfig"`
 }
@@ -466,10 +570,14 @@ type AuthSystemImages struct {
 	KubeAPIAuth string `json:"kubeAPIAuth,omitempty"`
 }
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type OIDCConfig struct {
-	AuthConfig `json:",inline" mapstructure:",squash"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common AuthConfigCommon `json:",inline"`
 
 	ClientID           string `json:"clientId" norman:"required"`
 	ClientSecret       string `json:"clientSecret,omitempty" norman:"required,type=password"`
@@ -492,6 +600,13 @@ type OIDCApplyInput struct {
 	Enabled    bool       `json:"enabled,omitempty"`
 }
 
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type KeyCloakOIDCConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Common     AuthConfigCommon `json:",inline"`
 	OIDCConfig `json:",inline" mapstructure:",squash"`
 }
