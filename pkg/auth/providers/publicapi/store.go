@@ -1,22 +1,25 @@
 package publicapi
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/objectclient"
 	"github.com/rancher/norman/store/empty"
 	"github.com/rancher/norman/types"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/rancher/rancher/pkg/auth/providers"
 	"github.com/rancher/rancher/pkg/auth/settings"
 	"github.com/rancher/rancher/pkg/auth/util"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/namespace"
 	"github.com/rancher/rancher/pkg/types/config"
-	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func setAuthProvidersStore(schema *types.Schema, apiContext *config.ScaledContext) {
@@ -28,6 +31,7 @@ func setAuthProvidersStore(schema *types.Schema, apiContext *config.ScaledContex
 type authProvidersStore struct {
 	empty.Store
 	authConfigsRaw objectclient.GenericClient
+	authConfigs    v3.AuthConfigInterface
 }
 
 func (s *authProvidersStore) ByID(apiContext *types.APIContext, schema *types.Schema, id string) (map[string]interface{}, error) {
@@ -54,10 +58,29 @@ func (s *authProvidersStore) List(apiContext *types.APIContext, schema *types.Sc
 	var result []map[string]interface{}
 	list, _ := rrr.(*unstructured.UnstructuredList)
 	for _, i := range list.Items {
-		if t, ok := i.Object["type"].(string); ok && t != "" {
-			if enabled, ok := i.Object["enabled"].(bool); ok && enabled {
+		var activeProviderName string
+		if metadata, ok := i.Object["metadata"].(map[string]interface{}); ok {
+			activeProviderName, ok = metadata["name"].(string)
+		}
+		activeProvider, ok := i.Object[activeProviderName].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("unable to get provider from unstructured content")
+		}
+		logrus.Infof("activeProvider is %v", activeProvider)
+		providerCommon, ok := activeProvider["common"].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("unable to get provider.ommon from unstructured content")
+		}
+		logrus.Infof("activeProvider is %v", providerCommon)
+
+		if t, ok := providerCommon["type"].(string); ok && t != "" {
+			if enabled, ok := providerCommon["enabled"].(bool); ok && enabled {
 				i.Object[".host"] = util.GetHost(apiContext.Request)
-				provider, err := providers.GetProviderByType(t).TransformToAuthProvider(i.Object)
+				authProvider, err := providers.GetProvider(t)
+				if err != nil {
+					return result, err
+				}
+				provider, err := authProvider.TransformToAuthProvider(i.Object)
 				if err != nil {
 					return result, err
 				}
