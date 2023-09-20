@@ -112,7 +112,6 @@ spec:
         - rancherApiHost
         - spCert
         - spKey
-        - type
         - uidField
         - userNameField
         type: object

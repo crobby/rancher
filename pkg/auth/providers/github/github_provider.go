@@ -113,10 +113,10 @@ func (g *ghProvider) saveGithubConfig(config *v32.GithubConfig) error {
 	if err != nil {
 		return err
 	}
-	config.Common.APIVersion = "management.cattle.io/v3"
-	config.Common.Kind = v3.AuthConfigGroupVersionKind.Kind
+	config.APIVersion = "management.cattle.io/v3"
+	config.Kind = v3.AuthConfigGroupVersionKind.Kind
 	config.Common.Type = client.GithubConfigType
-	config.Common.ObjectMeta = storedGithubConfig.Common.ObjectMeta
+	config.ObjectMeta = storedGithubConfig.ObjectMeta
 
 	secretInfo := convert.ToString(config.ClientSecret)
 	field := strings.ToLower(client.GithubConfigFieldClientSecret)
@@ -126,7 +126,7 @@ func (g *ghProvider) saveGithubConfig(config *v32.GithubConfig) error {
 
 	config.ClientSecret = common.GetFullSecretName(config.Common.Type, field)
 
-	_, err = g.authConfigs.ObjectClient().Update(config.Common.ObjectMeta.Name, config)
+	_, err = g.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
 	if err != nil {
 		return err
 	}

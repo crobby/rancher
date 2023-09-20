@@ -78,21 +78,31 @@ func addAuthConfig(name, aType string, enabled bool, management *config.Manageme
 	}
 	annotations[auth.CleanupAnnotation] = auth.CleanupRancherLocked
 
-	created, err := management.Management.AuthConfigs("").Create(&v3.AuthConfig{
+	authConfigObject := &v3.AuthConfig{
 		TypeMeta: v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{
 			Name:        name,
 			Annotations: annotations,
 		},
-		ProviderSpecific: apimgmtv3.OneProvider{
-			Local: apimgmtv3.LocalConfig{
-				Common: apimgmtv3.AuthConfigCommon{
-					Enabled: true,
-					Type:    "local",
-				},
+	}
+	if aType == client.LocalConfigType {
+		authConfigObject.Local = apimgmtv3.LocalConfig{
+			Common: apimgmtv3.AuthConfigCommon{
+				Enabled: true,
+				Type:    "local",
 			},
-		},
-	})
+		}
+	} else {
+		authConfigObject.ActiveDirectory = apimgmtv3.ActiveDirectoryConfig{
+			Common: apimgmtv3.AuthConfigCommon{
+				Enabled: false,
+				Type:    "activedirectory",
+			},
+		}
+	}
+
+	created, err := management.Management.AuthConfigs("").Create(authConfigObject)
+
 	logrus.Infof("the authconfig created was: %v", created)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err

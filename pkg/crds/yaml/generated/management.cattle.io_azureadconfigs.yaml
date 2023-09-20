@@ -102,8 +102,6 @@ spec:
           type:
             description: Type refers to which Auth Provider this AuthConfig represents.
             type: string
-        required:
-        - type
         type: object
     served: true
     storage: true

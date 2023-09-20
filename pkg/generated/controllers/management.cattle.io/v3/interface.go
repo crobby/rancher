@@ -33,10 +33,8 @@ func init() {
 type Interface interface {
 	ADFSConfig() ADFSConfigController
 	APIService() APIServiceController
-	ActiveDirectoryConfig() ActiveDirectoryConfigController
 	ActiveDirectoryProvider() ActiveDirectoryProviderController
 	AuthConfig() AuthConfigController
-	AuthConfigCommon() AuthConfigCommonController
 	AuthProvider() AuthProviderController
 	AuthToken() AuthTokenController
 	AzureADConfig() AzureADConfigController
@@ -77,7 +75,6 @@ type Interface interface {
 	KeyCloakOIDCConfig() KeyCloakOIDCConfigController
 	KontainerDriver() KontainerDriverController
 	LdapConfig() LdapConfigController
-	LocalConfig() LocalConfigController
 	LocalProvider() LocalProviderController
 	ManagedChart() ManagedChartController
 	MonitorMetric() MonitorMetricController
@@ -91,7 +88,6 @@ type Interface interface {
 	OIDCConfig() OIDCConfigController
 	OIDCProvider() OIDCProviderController
 	OKTAConfig() OKTAConfigController
-	OneProvider() OneProviderController
 	OpenLdapConfig() OpenLdapConfigController
 	OpenLdapProvider() OpenLdapProviderController
 	PingConfig() PingConfigController
@@ -145,20 +141,12 @@ func (v *version) APIService() APIServiceController {
 	return generic.NewNonNamespacedController[*v3.APIService, *v3.APIServiceList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "APIService"}, "apiservices", v.controllerFactory)
 }
 
-func (v *version) ActiveDirectoryConfig() ActiveDirectoryConfigController {
-	return generic.NewController[*v3.ActiveDirectoryConfig, *v3.ActiveDirectoryConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "ActiveDirectoryConfig"}, "activedirectoryconfigs", true, v.controllerFactory)
-}
-
 func (v *version) ActiveDirectoryProvider() ActiveDirectoryProviderController {
 	return generic.NewNonNamespacedController[*v3.ActiveDirectoryProvider, *v3.ActiveDirectoryProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "ActiveDirectoryProvider"}, "activedirectoryproviders", v.controllerFactory)
 }
 
 func (v *version) AuthConfig() AuthConfigController {
 	return generic.NewNonNamespacedController[*v3.AuthConfig, *v3.AuthConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthConfig"}, "authconfigs", v.controllerFactory)
-}
-
-func (v *version) AuthConfigCommon() AuthConfigCommonController {
-	return generic.NewNonNamespacedController[*v3.AuthConfigCommon, *v3.AuthConfigCommonList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "AuthConfigCommon"}, "authconfigcommons", v.controllerFactory)
 }
 
 func (v *version) AuthProvider() AuthProviderController {
@@ -321,10 +309,6 @@ func (v *version) LdapConfig() LdapConfigController {
 	return generic.NewController[*v3.LdapConfig, *v3.LdapConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "LdapConfig"}, "ldapconfigs", true, v.controllerFactory)
 }
 
-func (v *version) LocalConfig() LocalConfigController {
-	return generic.NewController[*v3.LocalConfig, *v3.LocalConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "LocalConfig"}, "localconfigs", true, v.controllerFactory)
-}
-
 func (v *version) LocalProvider() LocalProviderController {
 	return generic.NewNonNamespacedController[*v3.LocalProvider, *v3.LocalProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "LocalProvider"}, "localproviders", v.controllerFactory)
 }
@@ -375,10 +359,6 @@ func (v *version) OIDCProvider() OIDCProviderController {
 
 func (v *version) OKTAConfig() OKTAConfigController {
 	return generic.NewController[*v3.OKTAConfig, *v3.OKTAConfigList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OKTAConfig"}, "oktaconfigs", true, v.controllerFactory)
-}
-
-func (v *version) OneProvider() OneProviderController {
-	return generic.NewController[*v3.OneProvider, *v3.OneProviderList](schema.GroupVersionKind{Group: "management.cattle.io", Version: "v3", Kind: "OneProvider"}, "oneproviders", true, v.controllerFactory)
 }
 
 func (v *version) OpenLdapConfig() OpenLdapConfigController {

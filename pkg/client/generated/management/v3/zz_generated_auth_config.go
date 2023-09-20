@@ -5,29 +5,31 @@ import (
 )
 
 const (
-	AuthConfigType                  = "authConfig"
-	AuthConfigFieldAnnotations      = "annotations"
-	AuthConfigFieldCreated          = "created"
-	AuthConfigFieldCreatorID        = "creatorId"
-	AuthConfigFieldLabels           = "labels"
-	AuthConfigFieldName             = "name"
-	AuthConfigFieldOwnerReferences  = "ownerReferences"
-	AuthConfigFieldProviderSpecific = "providerSpecific"
-	AuthConfigFieldRemoved          = "removed"
-	AuthConfigFieldUUID             = "uuid"
+	AuthConfigType                 = "authConfig"
+	AuthConfigFieldActiveDirectory = "activedirectory"
+	AuthConfigFieldAnnotations     = "annotations"
+	AuthConfigFieldCreated         = "created"
+	AuthConfigFieldCreatorID       = "creatorId"
+	AuthConfigFieldLabels          = "labels"
+	AuthConfigFieldLocal           = "local"
+	AuthConfigFieldName            = "name"
+	AuthConfigFieldOwnerReferences = "ownerReferences"
+	AuthConfigFieldRemoved         = "removed"
+	AuthConfigFieldUUID            = "uuid"
 )
 
 type AuthConfig struct {
 	types.Resource
-	Annotations      map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-	Created          string            `json:"created,omitempty" yaml:"created,omitempty"`
-	CreatorID        string            `json:"creatorId,omitempty" yaml:"creatorId,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
-	Name             string            `json:"name,omitempty" yaml:"name,omitempty"`
-	OwnerReferences  []OwnerReference  `json:"ownerReferences,omitempty" yaml:"ownerReferences,omitempty"`
-	ProviderSpecific *OneProvider      `json:"providerSpecific,omitempty" yaml:"providerSpecific,omitempty"`
-	Removed          string            `json:"removed,omitempty" yaml:"removed,omitempty"`
-	UUID             string            `json:"uuid,omitempty" yaml:"uuid,omitempty"`
+	ActiveDirectory *ActiveDirectoryConfig `json:"activedirectory,omitempty" yaml:"activedirectory,omitempty"`
+	Annotations     map[string]string      `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	Created         string                 `json:"created,omitempty" yaml:"created,omitempty"`
+	CreatorID       string                 `json:"creatorId,omitempty" yaml:"creatorId,omitempty"`
+	Labels          map[string]string      `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Local           *LocalConfig           `json:"local,omitempty" yaml:"local,omitempty"`
+	Name            string                 `json:"name,omitempty" yaml:"name,omitempty"`
+	OwnerReferences []OwnerReference       `json:"ownerReferences,omitempty" yaml:"ownerReferences,omitempty"`
+	Removed         string                 `json:"removed,omitempty" yaml:"removed,omitempty"`
+	UUID            string                 `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 }
 
 type AuthConfigCollection struct {

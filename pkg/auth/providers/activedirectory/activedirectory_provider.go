@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rancher/norman/httperror"
-
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/types"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/auth/providers/common"
@@ -97,10 +94,11 @@ func (p *adProvider) AuthenticateUser(ctx context.Context, input interface{}) (v
 		return v3.Principal{}, nil, "", errors.New("can't find authprovider")
 	}
 
-	// If a migration is running, we need to block logins and indicate why we are doing so
-	if config.Annotations != nil && config.Annotations[StatusACMigrationRunning] == StatusMigrationRunning {
-		return v3.Principal{}, nil, "", httperror.WrapAPIError(err, httperror.ClusterUnavailable, StatusLoginDisabled)
-	}
+	// TODO sort this out at some point
+	//// If a migration is running, we need to block logins and indicate why we are doing so
+	//if config.Annotations != nil && config.Annotations[StatusACMigrationRunning] == StatusMigrationRunning {
+	//	return v3.Principal{}, nil, "", httperror.WrapAPIError(err, httperror.ClusterUnavailable, StatusLoginDisabled)
+	//}
 
 	principal, groupPrincipal, err := p.loginUser(login, config, caPool, false)
 	if err != nil {
@@ -171,22 +169,12 @@ func (p *adProvider) isThisUserMe(me v3.Principal, other v3.Principal) bool {
 
 func (p *adProvider) getActiveDirectoryConfig() (*v32.ActiveDirectoryConfig, *x509.CertPool, error) {
 	// TODO See if this can be simplified. also, this makes an api call everytime. find a better way
-	authConfigObj, err := p.authConfigs.ObjectClient().UnstructuredClient().Get("activedirectory", metav1.GetOptions{})
+	authConfigObj, err := p.authConfigs.Get("activedirectory", metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to retrieve ActiveDirectoryConfig, error: %v", err)
 	}
 
-	u, ok := authConfigObj.(runtime.Unstructured)
-	if !ok {
-		return nil, nil, fmt.Errorf("failed to retrieve ActiveDirectoryConfig, cannot read k8s Unstructured data")
-	}
-	storedADConfigMap := u.UnstructuredContent()
-
-	storedADConfig := &v32.ActiveDirectoryConfig{}
-	err = common.Decode(storedADConfigMap, storedADConfig)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to decode Active Directory Config: %w", err)
-	}
+	storedADConfig := authConfigObj.ActiveDirectory
 
 	if p.certs != storedADConfig.Certificate || p.caPool == nil {
 		pool, err := newCAPool(storedADConfig.Certificate)
@@ -206,7 +194,7 @@ func (p *adProvider) getActiveDirectoryConfig() (*v32.ActiveDirectoryConfig, *x5
 		storedADConfig.ServiceAccountPassword = value
 	}
 
-	return storedADConfig, p.caPool, nil
+	return &storedADConfig, p.caPool, nil
 }
 
 func newCAPool(cert string) (*x509.CertPool, error) {

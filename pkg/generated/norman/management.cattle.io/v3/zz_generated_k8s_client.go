@@ -37,8 +37,6 @@ type Interface interface {
 	SamlTokensGetter
 	PrincipalsGetter
 	UsersGetter
-	AuthConfigCommonsGetter
-	OneProvidersGetter
 	AuthConfigsGetter
 	LdapConfigsGetter
 	TokensGetter
@@ -469,34 +467,6 @@ func (c *Client) Users(namespace string) UserInterface {
 	sharedClient := c.clientFactory.ForResourceKind(UserGroupVersionResource, UserGroupVersionKind.Kind, false)
 	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &UserResource, UserGroupVersionKind, userFactory{})
 	return &userClient{
-		ns:           namespace,
-		client:       c,
-		objectClient: objectClient,
-	}
-}
-
-type AuthConfigCommonsGetter interface {
-	AuthConfigCommons(namespace string) AuthConfigCommonInterface
-}
-
-func (c *Client) AuthConfigCommons(namespace string) AuthConfigCommonInterface {
-	sharedClient := c.clientFactory.ForResourceKind(AuthConfigCommonGroupVersionResource, AuthConfigCommonGroupVersionKind.Kind, false)
-	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &AuthConfigCommonResource, AuthConfigCommonGroupVersionKind, authConfigCommonFactory{})
-	return &authConfigCommonClient{
-		ns:           namespace,
-		client:       c,
-		objectClient: objectClient,
-	}
-}
-
-type OneProvidersGetter interface {
-	OneProviders(namespace string) OneProviderInterface
-}
-
-func (c *Client) OneProviders(namespace string) OneProviderInterface {
-	sharedClient := c.clientFactory.ForResourceKind(OneProviderGroupVersionResource, OneProviderGroupVersionKind.Kind, false)
-	objectClient := objectclient.NewObjectClient(namespace, sharedClient, &OneProviderResource, OneProviderGroupVersionKind, oneProviderFactory{})
-	return &oneProviderClient{
 		ns:           namespace,
 		client:       c,
 		objectClient: objectClient,

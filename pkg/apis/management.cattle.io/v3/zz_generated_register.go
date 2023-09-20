@@ -30,10 +30,8 @@ import (
 var (
 	ADFSConfigResourceName                                = "adfsconfigs"
 	APIServiceResourceName                                = "apiservices"
-	ActiveDirectoryConfigResourceName                     = "activedirectoryconfigs"
 	ActiveDirectoryProviderResourceName                   = "activedirectoryproviders"
 	AuthConfigResourceName                                = "authconfigs"
-	AuthConfigCommonResourceName                          = "authconfigcommons"
 	AuthProviderResourceName                              = "authproviders"
 	AuthTokenResourceName                                 = "authtokens"
 	AzureADConfigResourceName                             = "azureadconfigs"
@@ -74,7 +72,6 @@ var (
 	KeyCloakOIDCConfigResourceName                        = "keycloakoidcconfigs"
 	KontainerDriverResourceName                           = "kontainerdrivers"
 	LdapConfigResourceName                                = "ldapconfigs"
-	LocalConfigResourceName                               = "localconfigs"
 	LocalProviderResourceName                             = "localproviders"
 	ManagedChartResourceName                              = "managedcharts"
 	MonitorMetricResourceName                             = "monitormetrics"
@@ -88,7 +85,6 @@ var (
 	OIDCConfigResourceName                                = "oidcconfigs"
 	OIDCProviderResourceName                              = "oidcproviders"
 	OKTAConfigResourceName                                = "oktaconfigs"
-	OneProviderResourceName                               = "oneproviders"
 	OpenLdapConfigResourceName                            = "openldapconfigs"
 	OpenLdapProviderResourceName                          = "openldapproviders"
 	PingConfigResourceName                                = "pingconfigs"
@@ -149,14 +145,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&ADFSConfigList{},
 		&APIService{},
 		&APIServiceList{},
-		&ActiveDirectoryConfig{},
-		&ActiveDirectoryConfigList{},
 		&ActiveDirectoryProvider{},
 		&ActiveDirectoryProviderList{},
 		&AuthConfig{},
 		&AuthConfigList{},
-		&AuthConfigCommon{},
-		&AuthConfigCommonList{},
 		&AuthProvider{},
 		&AuthProviderList{},
 		&AuthToken{},
@@ -237,8 +229,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&KontainerDriverList{},
 		&LdapConfig{},
 		&LdapConfigList{},
-		&LocalConfig{},
-		&LocalConfigList{},
 		&LocalProvider{},
 		&LocalProviderList{},
 		&ManagedChart{},
@@ -265,8 +255,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&OIDCProviderList{},
 		&OKTAConfig{},
 		&OKTAConfigList{},
-		&OneProvider{},
-		&OneProviderList{},
 		&OpenLdapConfig{},
 		&OpenLdapConfigList{},
 		&OpenLdapProvider{},

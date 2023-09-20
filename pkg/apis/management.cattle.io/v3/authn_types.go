@@ -178,22 +178,18 @@ type AuthConfig struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// ProviderSpecific is the object that contains fields specific to a given provider
-	ProviderSpecific OneProvider `json:",inline"`
+	//ProviderSpecific OneProvider `json:"providerSpecific"`
+
+	// +optional
+	ActiveDirectory ActiveDirectoryConfig `json:"activedirectory,omitempty"`
+	// +optional
+	Local LocalConfig `json:"local,omitempty"`
 }
 
-// +genclient
-// +kubebuilder:resource:scope=Cluster
-// +genclient:nonNamespaced
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 type AuthConfigCommon struct {
-	metav1.TypeMeta `json:",inline"`
-	// Standard object metadata; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata.
-	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
 	// Type refers to which Auth Provider this AuthConfig represents.
-	Type string `json:"type" norman:"noupdate"`
+	// +optional
+	Type string `json:"type,omitempty" norman:"noupdate"`
 
 	// Enabled If true, this Auth Provider is enabled.
 	Enabled bool `json:"enabled,omitempty"`
@@ -212,18 +208,11 @@ type AuthConfigCommon struct {
 	Status AuthConfigStatus `json:"status,omitempty"`
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // OneProvider defines a field that can have one of four possible choices.
-type OneProvider struct {
-	// You can use TypeMeta and ObjectMeta if needed for each choice.
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	ActiveDirectory ActiveDirectoryConfig `json:"inline,omitempty"`
-	Local           LocalConfig           `json:"inline,omitempty"`
-}
+//type OneProvider struct {
+//	ActiveDirectory ActiveDirectoryConfig `json:",omitempty"`
+//	Local           LocalConfig           `json:",omitempty"`
+//}
 
 type AuthConfigStatus struct {
 	// AuthConfigStatus represents an assortment of statuses that are related to a given Auth Provider.
@@ -265,14 +254,8 @@ type SamlToken struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 type LocalConfig struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Common AuthConfigCommon `json:",inline"`
+	Common AuthConfigCommon `json:"common"`
 }
 
 // +genclient
@@ -361,14 +344,8 @@ type AzureADConfigApplyInput struct {
 	Code   string        `json:"code,omitempty"`
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 type ActiveDirectoryConfig struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Common AuthConfigCommon `json:",inline"`
+	Common AuthConfigCommon `json:"common"`
 
 	Servers                      []string `json:"servers,omitempty"                     norman:"type=array[string],required"`
 	Port                         int64    `json:"port,omitempty"                        norman:"default=389"`

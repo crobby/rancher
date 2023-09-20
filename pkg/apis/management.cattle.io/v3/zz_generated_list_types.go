@@ -60,23 +60,6 @@ func NewAPIService(namespace, name string, obj APIService) *APIService {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ActiveDirectoryConfigList is a list of ActiveDirectoryConfig resources
-type ActiveDirectoryConfigList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []ActiveDirectoryConfig `json:"items"`
-}
-
-func NewActiveDirectoryConfig(namespace, name string, obj ActiveDirectoryConfig) *ActiveDirectoryConfig {
-	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("ActiveDirectoryConfig").ToAPIVersionAndKind()
-	obj.Name = name
-	obj.Namespace = namespace
-	return &obj
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // ActiveDirectoryProviderList is a list of ActiveDirectoryProvider resources
 type ActiveDirectoryProviderList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -104,23 +87,6 @@ type AuthConfigList struct {
 
 func NewAuthConfig(namespace, name string, obj AuthConfig) *AuthConfig {
 	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("AuthConfig").ToAPIVersionAndKind()
-	obj.Name = name
-	obj.Namespace = namespace
-	return &obj
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// AuthConfigCommonList is a list of AuthConfigCommon resources
-type AuthConfigCommonList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []AuthConfigCommon `json:"items"`
-}
-
-func NewAuthConfigCommon(namespace, name string, obj AuthConfigCommon) *AuthConfigCommon {
-	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("AuthConfigCommon").ToAPIVersionAndKind()
 	obj.Name = name
 	obj.Namespace = namespace
 	return &obj
@@ -791,23 +757,6 @@ func NewLdapConfig(namespace, name string, obj LdapConfig) *LdapConfig {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// LocalConfigList is a list of LocalConfig resources
-type LocalConfigList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []LocalConfig `json:"items"`
-}
-
-func NewLocalConfig(namespace, name string, obj LocalConfig) *LocalConfig {
-	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("LocalConfig").ToAPIVersionAndKind()
-	obj.Name = name
-	obj.Namespace = namespace
-	return &obj
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // LocalProviderList is a list of LocalProvider resources
 type LocalProviderList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -1022,23 +971,6 @@ type OKTAConfigList struct {
 
 func NewOKTAConfig(namespace, name string, obj OKTAConfig) *OKTAConfig {
 	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("OKTAConfig").ToAPIVersionAndKind()
-	obj.Name = name
-	obj.Namespace = namespace
-	return &obj
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// OneProviderList is a list of OneProvider resources
-type OneProviderList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata"`
-
-	Items []OneProvider `json:"items"`
-}
-
-func NewOneProvider(namespace, name string, obj OneProvider) *OneProvider {
-	obj.APIVersion, obj.Kind = SchemeGroupVersion.WithKind("OneProvider").ToAPIVersionAndKind()
 	obj.Name = name
 	obj.Namespace = namespace
 	return &obj

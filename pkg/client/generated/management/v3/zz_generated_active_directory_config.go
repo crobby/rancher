@@ -2,12 +2,9 @@ package client
 
 const (
 	ActiveDirectoryConfigType                              = "activeDirectoryConfig"
-	ActiveDirectoryConfigFieldAnnotations                  = "annotations"
 	ActiveDirectoryConfigFieldCertificate                  = "certificate"
 	ActiveDirectoryConfigFieldCommon                       = "common"
 	ActiveDirectoryConfigFieldConnectionTimeout            = "connectionTimeout"
-	ActiveDirectoryConfigFieldCreated                      = "created"
-	ActiveDirectoryConfigFieldCreatorID                    = "creatorId"
 	ActiveDirectoryConfigFieldDefaultLoginDomain           = "defaultLoginDomain"
 	ActiveDirectoryConfigFieldGroupDNAttribute             = "groupDNAttribute"
 	ActiveDirectoryConfigFieldGroupMemberMappingAttribute  = "groupMemberMappingAttribute"
@@ -17,18 +14,13 @@ const (
 	ActiveDirectoryConfigFieldGroupSearchAttribute         = "groupSearchAttribute"
 	ActiveDirectoryConfigFieldGroupSearchBase              = "groupSearchBase"
 	ActiveDirectoryConfigFieldGroupSearchFilter            = "groupSearchFilter"
-	ActiveDirectoryConfigFieldLabels                       = "labels"
-	ActiveDirectoryConfigFieldName                         = "name"
 	ActiveDirectoryConfigFieldNestedGroupMembershipEnabled = "nestedGroupMembershipEnabled"
-	ActiveDirectoryConfigFieldOwnerReferences              = "ownerReferences"
 	ActiveDirectoryConfigFieldPort                         = "port"
-	ActiveDirectoryConfigFieldRemoved                      = "removed"
 	ActiveDirectoryConfigFieldServers                      = "servers"
 	ActiveDirectoryConfigFieldServiceAccountPassword       = "serviceAccountPassword"
 	ActiveDirectoryConfigFieldServiceAccountUsername       = "serviceAccountUsername"
 	ActiveDirectoryConfigFieldStartTLS                     = "starttls"
 	ActiveDirectoryConfigFieldTLS                          = "tls"
-	ActiveDirectoryConfigFieldUUID                         = "uuid"
 	ActiveDirectoryConfigFieldUserDisabledBitMask          = "userDisabledBitMask"
 	ActiveDirectoryConfigFieldUserEnabledAttribute         = "userEnabledAttribute"
 	ActiveDirectoryConfigFieldUserLoginAttribute           = "userLoginAttribute"
@@ -40,12 +32,9 @@ const (
 )
 
 type ActiveDirectoryConfig struct {
-	Annotations                  map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 	Certificate                  string            `json:"certificate,omitempty" yaml:"certificate,omitempty"`
 	Common                       *AuthConfigCommon `json:"common,omitempty" yaml:"common,omitempty"`
 	ConnectionTimeout            int64             `json:"connectionTimeout,omitempty" yaml:"connectionTimeout,omitempty"`
-	Created                      string            `json:"created,omitempty" yaml:"created,omitempty"`
-	CreatorID                    string            `json:"creatorId,omitempty" yaml:"creatorId,omitempty"`
 	DefaultLoginDomain           string            `json:"defaultLoginDomain,omitempty" yaml:"defaultLoginDomain,omitempty"`
 	GroupDNAttribute             string            `json:"groupDNAttribute,omitempty" yaml:"groupDNAttribute,omitempty"`
 	GroupMemberMappingAttribute  string            `json:"groupMemberMappingAttribute,omitempty" yaml:"groupMemberMappingAttribute,omitempty"`
@@ -55,18 +44,13 @@ type ActiveDirectoryConfig struct {
 	GroupSearchAttribute         string            `json:"groupSearchAttribute,omitempty" yaml:"groupSearchAttribute,omitempty"`
 	GroupSearchBase              string            `json:"groupSearchBase,omitempty" yaml:"groupSearchBase,omitempty"`
 	GroupSearchFilter            string            `json:"groupSearchFilter,omitempty" yaml:"groupSearchFilter,omitempty"`
-	Labels                       map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
-	Name                         string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NestedGroupMembershipEnabled *bool             `json:"nestedGroupMembershipEnabled,omitempty" yaml:"nestedGroupMembershipEnabled,omitempty"`
-	OwnerReferences              []OwnerReference  `json:"ownerReferences,omitempty" yaml:"ownerReferences,omitempty"`
 	Port                         int64             `json:"port,omitempty" yaml:"port,omitempty"`
-	Removed                      string            `json:"removed,omitempty" yaml:"removed,omitempty"`
 	Servers                      []string          `json:"servers,omitempty" yaml:"servers,omitempty"`
 	ServiceAccountPassword       string            `json:"serviceAccountPassword,omitempty" yaml:"serviceAccountPassword,omitempty"`
 	ServiceAccountUsername       string            `json:"serviceAccountUsername,omitempty" yaml:"serviceAccountUsername,omitempty"`
 	StartTLS                     bool              `json:"starttls,omitempty" yaml:"starttls,omitempty"`
 	TLS                          bool              `json:"tls,omitempty" yaml:"tls,omitempty"`
-	UUID                         string            `json:"uuid,omitempty" yaml:"uuid,omitempty"`
 	UserDisabledBitMask          int64             `json:"userDisabledBitMask,omitempty" yaml:"userDisabledBitMask,omitempty"`
 	UserEnabledAttribute         string            `json:"userEnabledAttribute,omitempty" yaml:"userEnabledAttribute,omitempty"`
 	UserLoginAttribute           string            `json:"userLoginAttribute,omitempty" yaml:"userLoginAttribute,omitempty"`

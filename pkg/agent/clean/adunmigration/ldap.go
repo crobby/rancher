@@ -14,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -173,40 +172,13 @@ func adConfiguration(sc *config.ScaledContext) (*v3.ActiveDirectoryConfig, error
 	authConfigs := sc.Management.AuthConfigs("")
 	secrets := sc.Core.Secrets("")
 
-	authConfigObj, err := authConfigs.ObjectClient().UnstructuredClient().Get("activedirectory", metav1.GetOptions{})
+	authConfigObj, err := authConfigs.Get("activedirectory", metav1.GetOptions{})
 	if err != nil {
 		logrus.Errorf("[%v] failed to obtain activedirectory authConfigObj: %v", migrateAdUserOperation, err)
 		return nil, err
 	}
 
-	u, ok := authConfigObj.(runtime.Unstructured)
-	if !ok {
-		logrus.Errorf("[%v] failed to retrieve ActiveDirectoryConfig, cannot read k8s Unstructured data %v", migrateAdUserOperation, err)
-		return nil, err
-	}
-	storedADConfigMap := u.UnstructuredContent()
-
-	storedADConfig := &v3.ActiveDirectoryConfig{}
-	err = common.Decode(storedADConfigMap, storedADConfig)
-	if err != nil {
-		logrus.Errorf("[%v] errors while decoding stored AD config: %v", migrateAdUserOperation, err)
-		return nil, err
-	}
-
-	metadataMap, ok := storedADConfigMap["metadata"].(map[string]interface{})
-	if !ok {
-		logrus.Errorf("[%v] failed to retrieve ActiveDirectoryConfig, (second step), cannot read k8s Unstructured data %v", migrateAdUserOperation, err)
-		return nil, err
-	}
-
-	typemeta := &metav1.ObjectMeta{}
-	err = common.Decode(metadataMap, typemeta)
-	if err != nil {
-		logrus.Errorf("[%v] errors while decoding typemeta: %v", migrateAdUserOperation, err)
-		return nil, err
-	}
-
-	storedADConfig.ObjectMeta = *typemeta
+	storedADConfig := authConfigObj.ActiveDirectory
 
 	if storedADConfig.ServiceAccountPassword != "" {
 		value, err := common.ReadFromSecret(secrets, storedADConfig.ServiceAccountPassword,
@@ -217,7 +189,7 @@ func adConfiguration(sc *config.ScaledContext) (*v3.ActiveDirectoryConfig, error
 		storedADConfig.ServiceAccountPassword = value
 	}
 
-	return storedADConfig, nil
+	return &storedADConfig, nil
 }
 
 func newCAPool(cert string) (*x509.CertPool, error) {

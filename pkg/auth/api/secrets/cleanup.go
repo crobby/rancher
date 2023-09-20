@@ -24,7 +24,7 @@ func CleanupClientSecrets(secretInterface corev1.SecretInterface, config *v3.Aut
 
 	fields, ok := TypeToFields[activeAuthConfigCommon.Type]
 	if !ok {
-		return fmt.Errorf("cannot delete auth provider %s because it's unknown to Rancher", config.ProviderSpecific.ActiveDirectory.Common.Type)
+		return fmt.Errorf("cannot delete auth provider %s because it's unknown to Rancher", config.ActiveDirectory.Common.Type)
 	}
 
 	var result error

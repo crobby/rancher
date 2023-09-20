@@ -48,8 +48,11 @@ func stringToK8sTimeHookFunc() mapstructure.DecodeHookFunc {
 }
 
 func ActiveProviderInConfig(config v3.AuthConfig) (*v3.AuthConfigCommon, error) {
-	if &config.ProviderSpecific.ActiveDirectory != nil {
-		return &config.ProviderSpecific.ActiveDirectory.Common, nil
+	if &config.ActiveDirectory != nil {
+		return &config.ActiveDirectory.Common, nil
+	}
+	if &config.Local != nil {
+		return &config.Local.Common, nil
 	}
 	return &v3.AuthConfigCommon{}, nil
 }

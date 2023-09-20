@@ -98,24 +98,24 @@ func (p *adProvider) testAndApply(actionName string, action *types.Action, reque
 }
 
 func (p *adProvider) saveActiveDirectoryConfig(config *v32.ActiveDirectoryConfig) error {
-	storedConfig, _, err := p.getActiveDirectoryConfig()
-	if err != nil {
-		return err
-	}
-	config.APIVersion = "management.cattle.io/v3"
-	config.Kind = v3.AuthConfigGroupVersionKind.Kind
-	config.Common.Type = client.ActiveDirectoryConfigType
-	config.ObjectMeta = storedConfig.ObjectMeta
+	//TODO Rethink this whole function
+
+	//storedConfig, _, err := p.getActiveDirectoryConfig()
 
 	field := strings.ToLower(client.ActiveDirectoryConfigFieldServiceAccountPassword)
 	if err := common.CreateOrUpdateSecrets(p.secrets, config.ServiceAccountPassword, field, strings.ToLower(convert.ToString(config.Common.Type))); err != nil {
 		return err
 	}
 
+	authConfig := &v32.AuthConfig{}
+	authConfig.APIVersion = "management.cattle.io/v3"
+	authConfig.Kind = v3.AuthConfigGroupVersionKind.Kind
+	authConfig.ActiveDirectory.Common.Type = client.ActiveDirectoryConfigType
 	config.ServiceAccountPassword = common.GetFullSecretName(config.Common.Type, field)
+	authConfig.ActiveDirectory = *config
 
 	logrus.Debugf("updating activeDirectoryConfig")
-	_, err = p.authConfigs.ObjectClient().Update(config.ObjectMeta.Name, config)
+	_, err := p.authConfigs.Update(authConfig)
 	if err != nil {
 		return err
 	}
