@@ -89,14 +89,14 @@ func addAuthConfig(name, aType string, enabled bool, management *config.Manageme
 		authConfigObject.Local = apimgmtv3.LocalConfig{
 			Common: apimgmtv3.AuthConfigCommon{
 				Enabled: true,
-				Type:    "local",
+				Type:    client.LocalConfigType,
 			},
 		}
 	} else {
 		authConfigObject.ActiveDirectory = apimgmtv3.ActiveDirectoryConfig{
 			Common: apimgmtv3.AuthConfigCommon{
 				Enabled: false,
-				Type:    "activedirectory",
+				Type:    client.ActiveDirectoryConfigType,
 			},
 		}
 	}

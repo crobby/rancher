@@ -20,10 +20,12 @@ spec:
         description: AuthConfig holds the configuration information for an Auth Provider.
         properties:
           activedirectory:
+            description: Configuration for Active Directory
             properties:
               certificate:
                 type: string
               common:
+                description: Common configuration for all authentication providers
                 properties:
                   accessMode:
                     description: AccessMode refers to whether or not all users from
@@ -111,6 +113,8 @@ spec:
                 format: int64
                 type: integer
               servers:
+                description: List of hosts where ActiveDirectory is configured to
+                  respond
                 items:
                   type: string
                 type: array
@@ -153,6 +157,7 @@ spec:
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           local:
+            description: Configuraiton for the Local authentication provider
             properties:
               common:
                 properties:

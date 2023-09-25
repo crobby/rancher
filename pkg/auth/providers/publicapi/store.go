@@ -41,9 +41,11 @@ func (s *authProvidersStore) ByID(apiContext *types.APIContext, schema *types.Sc
 	}
 	u, _ := o.(runtime.Unstructured)
 	config := u.UnstructuredContent()
-	if t, ok := config["type"].(string); ok && t != "" {
+	var activeProviderName string
+	if metadata, ok := config["metadata"].(map[string]interface{}); ok {
+		activeProviderName, ok = metadata["name"].(string)
 		config[".host"] = util.GetHost(apiContext.Request)
-		provider, err := providers.GetProviderByType(t).TransformToAuthProvider(config)
+		provider, err := providers.GetProviderByType(activeProviderName + "Config").TransformToAuthProvider(config)
 		if err != nil {
 			return nil, err
 		}
@@ -76,10 +78,7 @@ func (s *authProvidersStore) List(apiContext *types.APIContext, schema *types.Sc
 		if t, ok := providerCommon["type"].(string); ok && t != "" {
 			if enabled, ok := providerCommon["enabled"].(bool); ok && enabled {
 				i.Object[".host"] = util.GetHost(apiContext.Request)
-				authProvider, err := providers.GetProvider(t)
-				if err != nil {
-					return result, err
-				}
+				authProvider := providers.GetProviderByType(t)
 				provider, err := authProvider.TransformToAuthProvider(i.Object)
 				if err != nil {
 					return result, err

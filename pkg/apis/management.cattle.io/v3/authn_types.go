@@ -180,8 +180,10 @@ type AuthConfig struct {
 	// ProviderSpecific is the object that contains fields specific to a given provider
 	//ProviderSpecific OneProvider `json:"providerSpecific"`
 
+	// Configuration for Active Directory
 	// +optional
 	ActiveDirectory ActiveDirectoryConfig `json:"activedirectory,omitempty"`
+	//Configuraiton for the Local authentication provider
 	// +optional
 	Local LocalConfig `json:"local,omitempty"`
 }
@@ -345,8 +347,10 @@ type AzureADConfigApplyInput struct {
 }
 
 type ActiveDirectoryConfig struct {
+	// Common configuration for all authentication providers
 	Common AuthConfigCommon `json:"common"`
 
+	// List of hosts where ActiveDirectory is configured to respond
 	Servers                      []string `json:"servers,omitempty"                     norman:"type=array[string],required"`
 	Port                         int64    `json:"port,omitempty"                        norman:"default=389"`
 	TLS                          bool     `json:"tls,omitempty"                         norman:"default=false"`

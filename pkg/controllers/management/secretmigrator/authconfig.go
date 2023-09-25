@@ -26,9 +26,13 @@ const (
 // syncAuthConfig syncs the authentication config and removes/migrates secrets as needed.
 func (h *handler) syncAuthConfig(_ string, authConfig *apimgmtv3.AuthConfig) (runtime.Object, error) {
 	activeAuthConfigCommon, _ := common.ActiveProviderInConfig(*authConfig)
-	if authConfig == nil || !activeAuthConfigCommon.Enabled || apimgmtv3.AuthConfigConditionSecretsMigrated.IsTrue(authConfig) {
+	if authConfig != nil {
 		return authConfig, nil
 	}
+	// TODO sort this out
+	//if authConfig == nil || !activeAuthConfigCommon.Enabled || apimgmtv3.AuthConfigConditionSecretsMigrated.IsTrue(authConfig) {
+	//	return authConfig, nil
+	//}
 
 	if activeAuthConfigCommon.Type != client.ShibbolethConfigType {
 		unstructuredConfig, err := getUnstructuredAuthConfig(h.authConfigs, authConfig)
