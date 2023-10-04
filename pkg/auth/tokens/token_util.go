@@ -7,14 +7,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
+	"github.com/sirupsen/logrus"
+
 	"github.com/rancher/rancher/pkg/auth/tokens/hashers"
 	"github.com/rancher/rancher/pkg/features"
 	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
 	"github.com/rancher/rancher/pkg/user"
-	"github.com/sirupsen/logrus"
 )
 
 func getAuthProviderName(principalID string) string {
@@ -174,6 +176,21 @@ func ConvertTokenKeyToHash(token *v3.Token) error {
 			token.Annotations = map[string]string{}
 		}
 		token.Annotations[TokenHashed] = "true"
+	}
+	return nil
+}
+
+// AddJWT takes a token with a hashed key and converts it to a JWT that has the Rancher Token in the payload
+func AddJWT(token *v3.Token) error {
+	payload := jwt.MapClaims{
+		"ranchertoken": token.ObjectMeta.Name + ":" + token.Token,
+	}
+	secretKey := []byte("your_secret_key_here")
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	signedToken, err := jwtToken.SignedString(secretKey)
+	token.JwtToken = signedToken
+	if err != nil {
+		return fmt.Errorf("unable to sign jwt")
 	}
 	return nil
 }

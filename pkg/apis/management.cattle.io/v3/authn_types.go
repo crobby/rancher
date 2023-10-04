@@ -22,6 +22,7 @@ type Token struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Token           string            `json:"token" norman:"writeOnly,noupdate"`
+	JwtToken        string            `json:"jwtToken,omitempty"`
 	UserPrincipal   Principal         `json:"userPrincipal" norman:"type=reference[principal]"`
 	GroupPrincipals []Principal       `json:"groupPrincipals,omitempty" norman:"type=array[reference[principal]]"`
 	ProviderInfo    map[string]string `json:"providerInfo,omitempty"`

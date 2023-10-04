@@ -14,14 +14,6 @@ import (
 	"github.com/rancher/norman/httperror"
 	"github.com/rancher/norman/types"
 	"github.com/rancher/norman/types/convert"
-	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/auth/util"
-	"github.com/rancher/rancher/pkg/catalog/utils"
-	clientv3 "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	v1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/settings"
-	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	"github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
@@ -30,6 +22,15 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
+
+	v32 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/auth/util"
+	"github.com/rancher/rancher/pkg/catalog/utils"
+	clientv3 "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	v1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/settings"
+	"github.com/rancher/rancher/pkg/types/config"
 )
 
 // TODO Cleanup error logging. If error is being returned, use errors.wrap to return and dont log here
@@ -117,9 +118,18 @@ func (m *Manager) createDerivedToken(jsonInput clientv3.Token, tokenAuthValue st
 		Description:   jsonInput.Description,
 		ClusterName:   jsonInput.ClusterID,
 	}
-	derivedToken, unhashedTokenKey, err = m.createToken(&derivedToken)
 
-	return derivedToken, unhashedTokenKey, 0, err
+	derivedToken, unhashedTokenKey, err = m.createToken(&derivedToken)
+	if err != nil {
+		return derivedToken, unhashedTokenKey, 0, err
+	}
+	err = AddJWT(&derivedToken)
+	if err != nil {
+		return derivedToken, unhashedTokenKey, 0, err
+	}
+	finalToken, err := m.updateToken(&derivedToken)
+
+	return *finalToken, unhashedTokenKey, 0, err
 
 }
 
