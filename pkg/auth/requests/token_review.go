@@ -3,7 +3,6 @@ package requests
 import (
 	"net/http"
 
-	"github.com/rancher/rancher/pkg/auth/tokens"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authentication/v1"
@@ -11,6 +10,8 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	authv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
+
+	"github.com/rancher/rancher/pkg/auth/tokens"
 )
 
 type TokenReviewAuth struct {
@@ -28,7 +29,7 @@ func NewTokenReviewAuth(authClient authv1.AuthenticationV1Interface) auth.Authen
 // review to authenticate token and extract user info.
 func (t *TokenReviewAuth) Authenticate(req *http.Request) (user.Info, bool, error) {
 	info, hasAuth := request.UserFrom(req.Context())
-	if info.GetName() != "system:cattle:error" {
+	if info != nil && info.GetName() != "system:cattle:error" {
 		// auth has succeeded
 		return info, hasAuth, nil
 	}

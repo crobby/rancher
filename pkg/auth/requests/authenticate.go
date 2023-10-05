@@ -75,6 +75,7 @@ func NewAuthenticator(ctx context.Context, clusterRouter ClusterRouter, mgmtCtx 
 		userLister:          mgmtCtx.Management.Users("").Controller().Lister(),
 		clusterRouter:       clusterRouter,
 		userAuthRefresher:   providerrefresh.NewUserAuthRefresher(ctx, mgmtCtx),
+		authClient:          NewTokenReviewAuth(mgmtCtx.K8sClient.AuthenticationV1()),
 	}
 }
 
@@ -87,6 +88,7 @@ type tokenAuthenticator struct {
 	userLister          v3.UserLister
 	clusterRouter       ClusterRouter
 	userAuthRefresher   providerrefresh.UserAuthRefresher
+	authClient          auth.Authenticator
 }
 
 const (
@@ -182,17 +184,30 @@ func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResp
 	//	fmt.Printf("Body: No Body Supplied\n")
 	//}
 	if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
-		parts := strings.Split(req.Header.Get("Authorization"), " ")
-		authJWT, err := decodeJWT(parts[1], "your_secret_key_here")
-		if err != nil {
-			return nil, fmt.Errorf("unable to decode JWT: %v", err)
+		user, authed, err := a.authClient.Authenticate(req)
+		logrus.Infof("user: %s, authed: %v, err: %v", user, authed, err)
+		if err != nil && authed {
+			return nil, fmt.Errorf("unable to authenticate: %v", err)
 		}
+		authResp.IsAuthed = authed
+		// TODO map the SA to a Rancher user
+		if user.GetName() == "system:serviceaccount:test:testsa" {
+			authResp.User = "user-fqq5f"
+		}
+
+		return authResp, nil
+		//parts := strings.Split(req.Header.Get("Authorization"), " ")
+		//
+		//authJWT, err := decodeJWT(parts[1], "your_secret_key_here")
+		//if err != nil {
+		//	return nil, fmt.Errorf("unable to decode JWT: %v", err)
+		//}
 		//logrus.Infof("decoded token: %s", b64decoded)
 		//decryptedToken, err := decryptAES(string(b64decoded[:]), "your_secret_key_here123456789123")
 		//if err != nil {
 		//	return nil, fmt.Errorf("unable to decrypt token JWT: %v", err)
 		//}
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authJWT["ranchertoken"]))
+		//req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authJWT["ranchertoken"]))
 	}
 
 	// original PoC
