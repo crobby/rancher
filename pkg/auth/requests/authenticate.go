@@ -163,28 +163,6 @@ func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResp
 		Extras: make(map[string][]string),
 	}
 
-	//var bodyBytes []byte
-	//var err error
-	//
-	//if req.Body != nil {
-	//	bodyBytes, err = ioutil.ReadAll(req.Body)
-	//	if err != nil {
-	//		fmt.Printf("Body reading error: %v", err)
-	//	}
-	//	defer req.Body.Close()
-	//}
-	//
-	//fmt.Printf("Headers: %+v\n", req.Header)
-	//
-	//if len(bodyBytes) > 0 {
-	//	var prettyJSON bytes.Buffer
-	//	if err = json.Indent(&prettyJSON, bodyBytes, "", "\t"); err != nil {
-	//		fmt.Printf("JSON parse error: %v", err)
-	//	}
-	//	logrus.Infof("%s", string(prettyJSON.Bytes()))
-	//} else {
-	//	fmt.Printf("Body: No Body Supplied\n")
-	//}
 	if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
 		sa, authed, err := a.authClient.Authenticate(req)
 		logrus.Infof("user: %v, authed: %v, err: %v", sa, authed, err)
@@ -202,28 +180,8 @@ func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResp
 				break
 			}
 		}
-
 		return authResp, nil
-		//parts := strings.Split(req.Header.Get("Authorization"), " ")
-		//
-		//authJWT, err := decodeJWT(parts[1], "your_secret_key_here")
-		//if err != nil {
-		//	return nil, fmt.Errorf("unable to decode JWT: %v", err)
-		//}
-		//logrus.Infof("decoded token: %s", b64decoded)
-		//decryptedToken, err := decryptAES(string(b64decoded[:]), "your_secret_key_here123456789123")
-		//if err != nil {
-		//	return nil, fmt.Errorf("unable to decrypt token JWT: %v", err)
-		//}
-		//req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authJWT["ranchertoken"]))
 	}
-
-	// original PoC
-	//if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
-	//authResp.IsAuthed = true
-	//authResp.User = "user-fqq5f"
-	//return authResp, nil
-	//}
 
 	token, err := a.TokenFromRequest(req)
 	if err != nil {

@@ -123,14 +123,7 @@ func (m *Manager) createDerivedToken(jsonInput clientv3.Token, tokenAuthValue st
 	if err != nil {
 		return derivedToken, unhashedTokenKey, 0, err
 	}
-	err = AddJWT(&derivedToken)
-	if err != nil {
-		return derivedToken, unhashedTokenKey, 0, err
-	}
-	finalToken, err := m.updateToken(&derivedToken)
-
-	return *finalToken, unhashedTokenKey, 0, err
-
+	return derivedToken, unhashedTokenKey, 0, err
 }
 
 // createToken returns the token object and it's unhashed token key, which is stored hashed
