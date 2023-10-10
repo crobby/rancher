@@ -16,10 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/utils/strings/slices"
 
 	"github.com/rancher/rancher/pkg/auth/providerrefresh"
 	"github.com/rancher/rancher/pkg/auth/providers"
@@ -163,29 +161,17 @@ func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResp
 		Extras: make(map[string][]string),
 	}
 
-	if strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews") {
-		sa, authed, err := a.authClient.Authenticate(req)
-		logrus.Infof("user: %v, authed: %v, err: %v", sa, authed, err)
-		if err != nil && authed {
-			return nil, fmt.Errorf("unable to authenticate: %v", err)
-		}
-		authResp.IsAuthed = authed
-		users, err := a.userLister.List("", labels.Everything())
-		if err != nil {
-			return authResp, fmt.Errorf("unable to list users: %v", err)
-		}
-		for _, user := range users {
-			if slices.Contains(user.ServiceAccounts, sa.GetName()) {
-				authResp.User = user.Name
-				break
-			}
-		}
-		return authResp, nil
-	}
-
+	isDownstreamTokenReview := strings.HasPrefix(req.URL.Path, "/k8s/clusters/") && strings.HasSuffix(req.URL.Path, "authentication.k8s.io/v1/tokenreviews")
 	token, err := a.TokenFromRequest(req)
 	if err != nil {
-		return nil, err
+		// If this request is for a downstream tokenReview, it's possible that a jwt is used instead of
+		// a Rancher token, so we will allow that check to take place downstream.
+		if isDownstreamTokenReview {
+			authResp.IsAuthed = true
+			return authResp, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if token.Enabled != nil && !*token.Enabled {

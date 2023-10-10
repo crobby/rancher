@@ -243,7 +243,6 @@ func (r *RemoteService) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			}
 			req.Header.Set("Authorization", "Bearer "+token)
 		}
-
 	}
 
 	if httpstream.IsUpgradeRequest(req) {
