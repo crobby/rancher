@@ -7,18 +7,24 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rancher/norman/httperror"
-	"github.com/rancher/rancher/pkg/auth/providerrefresh"
-	"github.com/rancher/rancher/pkg/auth/providers"
-	"github.com/rancher/rancher/pkg/auth/providers/common"
-	"github.com/rancher/rancher/pkg/auth/tokens"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/rancher/rancher/pkg/auth/providerrefresh"
+	"github.com/rancher/rancher/pkg/auth/providers"
+	"github.com/rancher/rancher/pkg/auth/providers/common"
+	"github.com/rancher/rancher/pkg/auth/tokens"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/types/config"
+)
+
+const (
+	proxyPrefix       = "/k8s/clusters/"
+	tokenReviewSuffix = "authentication.k8s.io/v1/tokenreviews"
 )
 
 var (
@@ -100,8 +106,15 @@ func (a *tokenAuthenticator) Authenticate(req *http.Request) (*AuthenticatorResp
 	authResp := &AuthenticatorResponse{
 		Extras: make(map[string][]string),
 	}
+
 	token, err := a.TokenFromRequest(req)
 	if err != nil {
+		// If this request is for a downstream tokenReview, it's possible that a jwt is used instead of
+		// a Rancher token, so we will allow that check to take place downstream.
+		if strings.HasPrefix(req.URL.Path, proxyPrefix) && strings.HasSuffix(req.URL.Path, tokenReviewSuffix) {
+			authResp.IsAuthed = true
+			return authResp, nil
+		}
 		return nil, err
 	}
 

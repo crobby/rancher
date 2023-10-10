@@ -233,14 +233,16 @@ func (r *RemoteService) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			er.Error(rw, req, validation.Unauthorized)
 			return
 		}
-		token, err := r.getImpersonatorAccountToken(userInfo)
-		if err != nil && !strings.Contains(err.Error(), dialer2.ErrAgentDisconnected.Error()) {
-			er.Error(rw, req, fmt.Errorf("unable to create impersonator account: %w", err))
-			return
+		// If we failed to find a Rancher user to use for impersonation, just use the jwt from the request itself
+		if userInfo.GetName() != "" {
+			token, err := r.getImpersonatorAccountToken(userInfo)
+			if err != nil && !strings.Contains(err.Error(), dialer2.ErrAgentDisconnected.Error()) {
+				er.Error(rw, req, fmt.Errorf("unable to create impersonator account: %w", err))
+				return
+			}
+			req.Header.Set("Authorization", "Bearer "+token)
 		}
-		req.Header.Set("Authorization", "Bearer "+token)
 	}
-
 	if httpstream.IsUpgradeRequest(req) {
 		upgradeProxy := NewUpgradeProxy(&u, transport)
 		upgradeProxy.ServeHTTP(rw, req)
