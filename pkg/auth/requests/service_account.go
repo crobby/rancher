@@ -5,13 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
-	"github.com/rancher/rancher/pkg/auth/tokens"
-	"github.com/rancher/rancher/pkg/clustermanager"
-	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
-	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
-	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/steve/pkg/auth"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/authentication/v1"
@@ -19,6 +14,12 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	authv1 "k8s.io/client-go/kubernetes/typed/authentication/v1"
+
+	"github.com/rancher/rancher/pkg/auth/tokens"
+	"github.com/rancher/rancher/pkg/clustermanager"
+	corev1 "github.com/rancher/rancher/pkg/generated/norman/core/v1"
+	v3 "github.com/rancher/rancher/pkg/generated/norman/management.cattle.io/v3"
+	"github.com/rancher/rancher/pkg/types/config"
 )
 
 type DownstreamTokenReviewAuth struct {
@@ -47,11 +48,13 @@ func (t *DownstreamTokenReviewAuth) Authenticate(req *http.Request) (user.Info, 
 	rawToken := tokens.GetTokenAuthFromRequest(req)
 
 	jwtParser := jwt.Parser{}
-	claims := jwt.StandardClaims{}
+	claims := jwt.RegisteredClaims{}
 	_, _, err := jwtParser.ParseUnverified(rawToken, &claims)
 	if err != nil {
 		return info, false, err
 	}
+
+	//TODO check expiration
 
 	if !strings.HasPrefix(claims.Subject, "system:serviceaccount:") {
 		return info, false, nil
@@ -94,7 +97,7 @@ func (t *DownstreamTokenReviewAuth) Authenticate(req *http.Request) (user.Info, 
 	}
 
 	return &user.DefaultInfo{
-		Name:   tokenReview.Status.User.Username,
+		Name:   "downstream:" + tokenReview.Status.User.Username,
 		UID:    tokenReview.Status.User.UID,
 		Groups: tokenReview.Status.User.Groups,
 	}, true, nil

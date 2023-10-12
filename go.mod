@@ -165,6 +165,7 @@ require (
 
 require (
 	github.com/containers/image/v5 v5.25.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/rancher/rancher/pkg/apis v0.0.0-20230915232223-a9ea4ce4a5ba
 )

@@ -7,6 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rancher/apiserver/pkg/parse"
+	"github.com/rancher/steve/pkg/auth"
+
 	"github.com/rancher/rancher/pkg/api/norman"
 	"github.com/rancher/rancher/pkg/api/norman/customization/aks"
 	"github.com/rancher/rancher/pkg/api/norman/customization/clusterregistrationtokens"
@@ -34,7 +36,6 @@ import (
 	"github.com/rancher/rancher/pkg/tunnelserver/mcmauthorizer"
 	"github.com/rancher/rancher/pkg/types/config"
 	"github.com/rancher/rancher/pkg/version"
-	"github.com/rancher/steve/pkg/auth"
 )
 
 func router(ctx context.Context, localClusterEnabled bool, tunnelAuthorizer *mcmauthorizer.Authorizer, scaledContext *config.ScaledContext, clusterManager *clustermanager.Manager) (func(http.Handler) http.Handler, error) {
@@ -95,13 +96,17 @@ func router(ctx context.Context, localClusterEnabled bool, tunnelAuthorizer *mcm
 	// Authenticated routes
 	impersonatingAuth := auth.ToMiddleware(requests.NewImpersonatingAuth(sar.NewSubjectAccessReview(clusterManager)))
 	saAuth := auth.ToMiddleware(requests.NewDownstreamTokenReviewAuth(scaledContext))
+	accessControlHandler := rbac.NewAccessControlHandler()
+
+	saAuthed := mux.NewRouter()
+	saAuthed.Use(mux.MiddlewareFunc(saAuth.Chain(impersonatingAuth).Chain(accessControlHandler)))
+	saAuthed.PathPrefix("/k8s/clusters/{clusterID}").Handler(k8sProxy)
 
 	authed := mux.NewRouter()
 	authed.UseEncodedPath()
-	accessControlHandler := rbac.NewAccessControlHandler()
 
-	authed.Use(mux.MiddlewareFunc(saAuth.Chain(impersonatingAuth)))
 	authed.Use(mux.MiddlewareFunc(accessControlHandler))
+	authed.Use(mux.MiddlewareFunc(impersonatingAuth))
 	authed.Use(requests.NewAuthenticatedFilter)
 
 	authed.Path("/meta/{resource:aks.+}").Handler(aks.NewAKSHandler(scaledContext))
@@ -128,7 +133,8 @@ func router(ctx context.Context, localClusterEnabled bool, tunnelAuthorizer *mcm
 
 	metricsAuthed.Path("/metrics").Handler(metricsHandler)
 
-	unauthed.NotFoundHandler = authed
+	unauthed.NotFoundHandler = saAuthed
+	saAuthed.NotFoundHandler = authed
 	authed.NotFoundHandler = metricsAuthed
 
 	return func(next http.Handler) http.Handler {
