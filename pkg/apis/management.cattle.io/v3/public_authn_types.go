@@ -165,7 +165,13 @@ type SamlProvider struct {
 
 type AzureADLogin struct {
 	GenericLogin `json:",inline"`
-	Code         string `json:"code" norman:"type=string,required"`
+
+	// AccessToken is the Oauth 2.0 access token received after an
+	// authentication flow.
+	AccessToken string `json:"access_token" norman:"type=string"`
+
+	// Deprecated: Send us an access token instead.
+	Code string `json:"code" norman:"type=string,required"`
 }
 
 // +genclient

@@ -3,6 +3,7 @@ package azure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -195,7 +196,22 @@ func (ap *Provider) TransformToAuthProvider(
 	authConfig map[string]interface{},
 ) (map[string]interface{}, error) {
 	p := common.TransformToAuthProvider(authConfig)
+	azureCfg, err := ap.GetAzureConfigK8s()
+	if err != nil {
+		return p, err
+	}
 	p[publicclient.AzureADProviderFieldRedirectURL] = formAzureRedirectURL(authConfig)
+	p[publicclient.AzureADProviderFieldScopes] = []string{"openid"}
+	p[publicclient.AzureADProviderFieldEndpoints] = uglyObjToMap(makeAzureADEndpoints(azureCfg.Endpoint, azureCfg.TenantID))
+	p[publicclient.AzureADProviderFieldAuthClientInfo] = uglyObjToMap(v32.OAuthAuthorizationInfo{
+		ClientID:     azureCfg.ApplicationID,
+		ClientSecret: azureCfg.ApplicationSecret,
+		RedirectURL:  "http://localhost:53000",
+	})
+	p[publicclient.AzureADProviderFieldDeviceClientInfo] = uglyObjToMap(v32.OAuthDeviceInfo{
+		ClientID: azureCfg.ApplicationID,
+	})
+
 	return p, nil
 }
 
@@ -494,4 +510,19 @@ func (ap *Provider) IsDisabledProvider() (bool, error) {
 		return false, err
 	}
 	return !azureConfig.Enabled, nil
+}
+
+func uglyObjToMap(v any) map[string]any {
+	bytes, _ := json.Marshal(v)
+	result := make(map[string]any)
+	_ = json.Unmarshal(bytes, &result)
+	return result
+}
+
+func makeAzureADEndpoints(hostname, tenantId string) v32.OAuthEndpoint {
+	return v32.OAuthEndpoint{
+		AuthURL:       fmt.Sprintf("%s/%s/oauth2/v2.0/authorize", hostname, tenantId),
+		TokenURL:      fmt.Sprintf("%s/%s/oauth2/v2.0/token", hostname, tenantId),
+		DeviceAuthURL: fmt.Sprintf("%s/%s/oauth2/v2.0/devicecode", hostname, tenantId),
+	}
 }

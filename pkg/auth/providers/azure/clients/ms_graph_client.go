@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/cache"
@@ -113,10 +115,24 @@ func (c azureMSGraphClient) LoginUser(config *v32.AzureADConfig, credential *v32
 	logrus.Debugf("[%s] Started token swap with AzureAD", providerLogPrefix)
 
 	// Acquire the OID just to verify the user.
-	oid, err := oidFromAuthCode(credential.Code, config)
-	if err != nil {
-		return v3.Principal{}, nil, "", err
+	var err error
+	oid := ""
+	if credential.Code != "" {
+		oid, err = oidFromAuthCode(credential.Code, config)
+		if err != nil {
+			return v3.Principal{}, nil, "", err
+		}
 	}
+
+	if credential.AccessToken != "" {
+		userInfo, err := oidFromAccessToken(credential.AccessToken)
+		logrus.Debug("userInfo %v", userInfo)
+		if err != nil {
+			return v3.Principal{}, nil, "", err
+		}
+		oid = userInfo.ID
+	}
+
 	logrus.Debugf("[%s] Completed token swap with AzureAD", providerLogPrefix)
 
 	logrus.Debugf("[%s] Started getting user info from AzureAD", providerLogPrefix)
@@ -140,6 +156,44 @@ func (c azureMSGraphClient) LoginUser(config *v32.AzureADConfig, credential *v32
 	// Return an empty string for the provider token, so that it does not get saved in a secret later, like users'
 	// access tokens are stored in secrets in the old Azure AD Graph flow.
 	return userPrincipal, groupPrincipals, "", nil
+}
+
+type UserInfo struct {
+	ID                string `json:"id"`
+	UserPrincipalName string `json:"userPrincipalName"`
+}
+
+func oidFromAccessToken(accessToken string) (*UserInfo, error) {
+	userInfoURL := "https://graph.microsoft.com/v1.0/me"
+
+	req, err := http.NewRequest("GET", userInfoURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Failed to fetch user info. Status: %s", resp.Status)
+	}
+
+	payload, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+	var userInfo UserInfo
+	err = json.Unmarshal(payload, &userInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &userInfo, nil
 }
 
 type customAuthResult struct {
