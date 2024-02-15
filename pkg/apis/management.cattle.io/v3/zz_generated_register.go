@@ -51,6 +51,7 @@ var (
 	FeatureResourceName                                   = "features"
 	FleetWorkspaceResourceName                            = "fleetworkspaces"
 	FreeIpaProviderResourceName                           = "freeipaproviders"
+	GenericOIDCProviderResourceName                       = "genericoidcproviders"
 	GithubProviderResourceName                            = "githubproviders"
 	GlobalDnsResourceName                                 = "globaldnses"
 	GlobalDnsProviderResourceName                         = "globaldnsproviders"
@@ -163,6 +164,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&FleetWorkspaceList{},
 		&FreeIpaProvider{},
 		&FreeIpaProviderList{},
+		&GenericOIDCProvider{},
+		&GenericOIDCProviderList{},
 		&GithubProvider{},
 		&GithubProviderList{},
 		&GlobalDns{},
