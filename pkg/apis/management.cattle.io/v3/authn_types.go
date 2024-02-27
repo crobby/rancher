@@ -497,3 +497,7 @@ type GenericOIDCApplyInput struct {
 	Code       string            `json:"code,omitempty"`
 	Enabled    bool              `json:"enabled,omitempty"`
 }
+
+type GenericOIDCTestOutput struct {
+	RedirectURL string `json:"redirectUrl"`
+}

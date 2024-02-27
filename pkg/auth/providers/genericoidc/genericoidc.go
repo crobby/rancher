@@ -138,22 +138,58 @@ func (g GenericOIDCProvider) TransformToAuthProvider(authConfig map[string]inter
 }
 
 func (g GenericOIDCProvider) RefetchGroupPrincipals(principalID string, secret string) ([]v3.Principal, error) {
-	//TODO implement me
-	return nil, nil
+	var groupPrincipals []v3.Principal
+	var claimInfo ClaimInfo
+
+	config, err := g.GetOIDCConfig()
+	if err != nil {
+		logrus.Errorf("[generic oidc] refetchGroupPrincipals: error fetching OIDCConfig: %v", err)
+		return groupPrincipals, err
+	}
+	// need to get the user information so that the refreshed token can be saved using the username / userID
+	user, err := g.UserMGR.GetUserByPrincipalID(principalID)
+	if err != nil {
+		logrus.Errorf("[generic oidc] refetchGroupPrincipals: error getting user by principalID: %v", err)
+		return groupPrincipals, err
+	}
+	//do not need userInfo or oauth2Token since we are only processing groups
+	_, _, err = g.getUserInfo(&g.CTX, config, secret, &claimInfo, user.Name)
+	if err != nil {
+		return groupPrincipals, err
+	}
+	return g.getGroupsFromClaimInfo(claimInfo), nil
 }
 
-func (g GenericOIDCProvider) CanAccessWithGroupProviders(userPrincipalID string, groups []v3.Principal) (bool, error) {
-	//TODO implement me
-	return true, nil
+func (g GenericOIDCProvider) CanAccessWithGroupProviders(userPrincipalID string, groupPrincipals []v3.Principal) (bool, error) {
+	config, err := g.GetOIDCConfig()
+	if err != nil {
+		logrus.Errorf("[generic oidc] canAccessWithGroupProviders: error fetching OIDCConfig: %v", err)
+		return false, err
+	}
+	allowed, err := g.UserMGR.CheckAccess(config.AccessMode, config.AllowedPrincipalIDs, userPrincipalID, groupPrincipals)
+	if err != nil {
+		return false, err
+	}
+	return allowed, nil
 }
 
 func (g GenericOIDCProvider) GetUserExtraAttributes(userPrincipal v3.Principal) map[string][]string {
-	//TODO implement me
-	return nil
+	extras := make(map[string][]string)
+	if userPrincipal.Name != "" {
+		extras[common.UserAttributePrincipalID] = []string{userPrincipal.Name}
+	}
+	if userPrincipal.LoginName != "" {
+		extras[common.UserAttributeUserName] = []string{userPrincipal.LoginName}
+	}
+	return extras
 }
 
 func (g GenericOIDCProvider) IsDisabledProvider() (bool, error) {
-	return false, nil
+	oidcConfig, err := g.GetOIDCConfig()
+	if err != nil {
+		return false, err
+	}
+	return !oidcConfig.Enabled, nil
 }
 
 func (g GenericOIDCProvider) GetOIDCConfig() (*v32.GenericOIDCConfig, error) {
@@ -335,7 +371,7 @@ func (g GenericOIDCProvider) groupToPrincipal(groupName string) v3.Principal {
 }
 
 func (g GenericOIDCProvider) getRedirectURL(config map[string]interface{}) string {
-	//TODO sort out scopes
+	//TODO sort out scopes...just hardcoded for now
 
 	return fmt.Sprintf(
 		"%s?client_id=%s&response_type=code&redirect_uri=%s&scope=openid%%20profile%%20email&",
