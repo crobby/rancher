@@ -345,6 +345,9 @@ func (o *OpenIDCProvider) GetOIDCConfig() (*v32.OIDCConfig, error) {
 			storedOidcConfig.ClientSecret = string(v)
 		}
 	}
+	if storedOidcConfigMap["scope"] != nil {
+		storedOidcConfig.Scopes = storedOidcConfigMap["scope"].(string)
+	}
 
 	return storedOidcConfig, nil
 }
