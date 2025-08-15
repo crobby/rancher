@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/crobby/remotedialer-proxy/forward"
+	"github.com/crobby/remotedialer-proxy/proxyclient"
 	"github.com/rancher/rancher/pkg/features"
 	"github.com/rancher/rancher/pkg/namespace"
 	"github.com/rancher/rancher/pkg/wrangler"
-	"github.com/rancher/remotedialer/forward"
-	"github.com/rancher/remotedialer/proxyclient"
 	corecontrollers "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/rancher/wrangler/v3/pkg/randomtoken"
 	"github.com/sirupsen/logrus"
