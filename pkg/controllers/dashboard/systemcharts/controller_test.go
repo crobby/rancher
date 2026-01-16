@@ -156,6 +156,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(6)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
@@ -245,6 +246,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster with system-upgrade-controller name override",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(6)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
@@ -334,6 +336,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster with the system-upgrade-controller deployment from old Fleet Bundle",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(4)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeploymentFromFleetBundle, nil).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
@@ -406,6 +409,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster without the system-upgrade-controller deployment",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(4)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(nil, errTest).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
@@ -478,6 +482,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster with imported-cluster-version-management disabled and existing plans",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(4)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(plans, nil).Times(1)
@@ -550,6 +555,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in downstream cluster with imported-cluster-version-management disabled",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(4)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
 				_ = settings.RancherWebhookVersion.Set("2.0.0")
@@ -622,6 +628,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in local cluster",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(7)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
@@ -730,6 +737,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in local cluster with imported-cluster-version-managements disabled",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(5)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(1)
 				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
@@ -822,6 +830,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in local cluster with imported-cluster-version-managements disabled and with existing plans",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(5)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
@@ -914,6 +923,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "normal installation in local cluster with imperative API enabled but RDP disabled",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(4)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
@@ -987,6 +997,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "installation with config cache errors",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(gomock.Any(), chart.CustomValueMapName).Return(nil, errTest).Times(7)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
@@ -1091,6 +1102,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "installation with image override",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(gomock.Any(), chart.CustomValueMapName).Return(emptyConfig, nil).Times(7)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
@@ -1214,6 +1226,7 @@ func Test_ChartInstallation(t *testing.T) {
 			name: "installation with webhook values",
 			setup: func(mocks testMocks) {
 				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).Times(1)
 				mocks.configCache.EXPECT().Get(gomock.Any(), chart.CustomValueMapName).Return(fullConfig, nil).Times(7)
 				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
 				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).Times(2)
@@ -1393,6 +1406,7 @@ func Test_TurtlesInstallation(t *testing.T) {
 	features.ManagedSystemUpgradeController.Set(false)
 	mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(plans, nil).Times(1)
 	mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, sucDeploymentName)).AnyTimes()
+	mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).AnyTimes()
 
 	expectedWebhookValues := map[string]interface{}{
 		"priorityClassName": priorityClassName,
@@ -1463,6 +1477,7 @@ func Test_SwitchFromProvisioningToTurtlesRace(t *testing.T) {
 	features.ManagedSystemUpgradeController.Set(false)
 	mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(plans, nil).Times(2)
 	mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, sucDeploymentName)).AnyTimes()
+	mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).AnyTimes()
 
 	gomock.InOrder(
 		mocks.manager.EXPECT().Ensure(
@@ -1547,6 +1562,7 @@ func Test_SwitchFromTurtlesToProvisioningRace(t *testing.T) {
 
 	mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(plans, nil).AnyTimes()
 	mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, sucDeploymentName)).AnyTimes()
+	mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).AnyTimes()
 
 	mocks.namespaceCache.EXPECT().Get(namespace.TurtlesNamespace).Return(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace.TurtlesNamespace}}, nil)
 	gomock.InOrder(
@@ -1622,6 +1638,7 @@ func Test_TurtlesWinsWhenBothEnabled(t *testing.T) {
 
 	mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(plans, nil).AnyTimes()
 	mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, sucDeploymentName)).AnyTimes()
+	mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "apps", Resource: "deployments"}, chart.WebhookChartName)).AnyTimes()
 
 	mocks.namespaceCache.EXPECT().Get(namespace.ProvisioningCAPINamespace).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "namespaces"}, namespace.ProvisioningCAPINamespace)).AnyTimes()
 	expectedTurtlesValues := map[string]interface{}{
