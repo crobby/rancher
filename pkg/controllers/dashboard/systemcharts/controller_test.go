@@ -1329,6 +1329,220 @@ func Test_ChartInstallation(t *testing.T) {
 				mocks.manager.EXPECT().Remove(operatorNamespace, "rancher-operator")
 			},
 		},
+		{
+			name: "install upstream webhook when downstream webhook exists",
+			setup: func(mocks testMocks) {
+				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(6)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
+				mocks.clusterCache.EXPECT().Get("local").Return(localCuster, nil).AnyTimes()
+				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
+				_ = settings.RancherWebhookVersion.Set("2.0.0")
+				_ = settings.RancherTurtlesVersion.Set("2.0.0")
+				_ = settings.SystemUpgradeControllerChartVersion.Set("2.0.0")
+				features.MCM.Set(true) // Enable MCM to trigger upstream webhook installation
+				features.MCMAgent.Set(true)
+				features.ManagedSystemUpgradeController.Set(true)
+				_ = os.Setenv("CATTLE_SUC_APP_NAME_OVERRIDE", "")
+
+				// Mock existing downstream webhook deployment
+				downstreamWebhook := &appsv1.Deployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      chart.WebhookChartName,
+						Namespace: namespace.System,
+					},
+					Spec: appsv1.DeploymentSpec{
+						Template: v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										Name: "rancher-webhook",
+										Env: []v1.EnvVar{
+											{
+												Name:  "ENABLE_MCM",
+												Value: "false",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(downstreamWebhook, nil).Times(1)
+
+				// Expect deletion of downstream webhook resources
+				mocks.deployment.EXPECT().Delete(namespace.System, chart.WebhookChartName, gomock.Any()).Return(nil)
+				mocks.validatingWebhookConfigurations.EXPECT().Delete(webhookConfigurationName, gomock.Any()).Return(nil)
+				mocks.mutatingWebhookConfigurations.EXPECT().Delete(webhookConfigurationName, gomock.Any()).Return(nil)
+
+				// rancher-webhook
+				expectedValues := map[string]interface{}{
+					"priorityClassName": priorityClassName,
+					"capi":              nil,
+					"mcm": map[string]interface{}{
+						"enabled": features.MCM.Enabled(),
+					},
+					"global": map[string]interface{}{
+						"cattle": map[string]interface{}{
+							"systemDefaultRegistry": settings.SystemDefaultRegistry.Get(),
+						},
+					},
+				}
+				mocks.manager.EXPECT().Ensure(
+					namespace.System,
+					chart.WebhookChartName,
+					chart.WebhookChartName,
+					"",
+					"2.0.0",
+					expectedValues,
+					gomock.AssignableToTypeOf(false),
+					"",
+				).Return(nil)
+
+				// rancher-turtles
+				expectedTurtlesValues := map[string]interface{}{
+					"priorityClassName": priorityClassName,
+					"features": map[string]interface{}{
+						"no-cert-manager": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"global": map[string]interface{}{
+						"cattle": map[string]interface{}{
+							"systemDefaultRegistry": settings.SystemDefaultRegistry.Get(),
+						},
+					},
+				}
+				mocks.manager.EXPECT().Ensure(
+					namespace.TurtlesNamespace,
+					chart.TurtlesChartName,
+					chart.TurtlesChartName,
+					"",
+					"2.0.0",
+					expectedTurtlesValues,
+					gomock.AssignableToTypeOf(false),
+					"",
+				).Return(nil)
+
+				// system-upgrade-controller
+				expectedSUCValues := map[string]interface{}{
+					"priorityClassName": priorityClassName,
+					"global": map[string]interface{}{
+						"cattle": map[string]interface{}{
+							"systemDefaultRegistry": settings.SystemDefaultRegistry.Get(),
+						},
+					},
+				}
+				mocks.manager.EXPECT().Ensure(
+					namespace.System,
+					chart.SystemUpgradeControllerChartName,
+					chart.SystemUpgradeControllerChartName,
+					"",
+					"2.0.0",
+					expectedSUCValues,
+					gomock.AssignableToTypeOf(false),
+					"",
+				).Return(nil)
+
+				// rancher-operator
+				mocks.manager.EXPECT().Uninstall(operatorNamespace, "rancher-operator").Return(nil)
+				mocks.manager.EXPECT().Remove(operatorNamespace, "rancher-operator")
+			},
+		},
+		{
+			name: "install downstream webhook when upstream webhook exists",
+			setup: func(mocks testMocks) {
+				mocks.namespaceCtrl.EXPECT().Delete(operatorNamespace, nil).Return(nil)
+				mocks.configCache.EXPECT().Get(namespace.System, chart.CustomValueMapName).Return(priorityConfig, nil).Times(6)
+				mocks.deploymentCache.EXPECT().Get(namespace.System, sucDeploymentName).Return(sucDeployment, nil).Times(1)
+				mocks.planCache.EXPECT().List(namespace.System, managedPlanSelector).Return(nil, nil).Times(1)
+				_ = settings.RancherWebhookVersion.Set("2.0.0")
+				_ = settings.RancherTurtlesVersion.Set("2.0.0")
+				_ = settings.SystemUpgradeControllerChartVersion.Set("2.0.0")
+				features.MCM.Set(false) // Disable MCM to trigger downstream webhook installation
+				features.MCMAgent.Set(true)
+				features.ManagedSystemUpgradeController.Set(true)
+				_ = os.Setenv("CATTLE_SUC_APP_NAME_OVERRIDE", "")
+
+				// Mock existing upstream webhook deployment
+				upstreamWebhook := &appsv1.Deployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      chart.WebhookChartName,
+						Namespace: namespace.System,
+					},
+					Spec: appsv1.DeploymentSpec{
+						Template: v1.PodTemplateSpec{
+							Spec: v1.PodSpec{
+								Containers: []v1.Container{
+									{
+										Name: "rancher-webhook",
+										Env: []v1.EnvVar{
+											{
+												Name:  "ENABLE_MCM",
+												Value: "true",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+				mocks.deploymentCache.EXPECT().Get(namespace.System, chart.WebhookChartName).Return(upstreamWebhook, nil).Times(1)
+
+				// rancher-webhook Ensure should NOT be called because we skip installation
+
+				// rancher-turtles
+				expectedTurtlesValues := map[string]interface{}{
+					"priorityClassName": priorityClassName,
+					"features": map[string]interface{}{
+						"no-cert-manager": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"global": map[string]interface{}{
+						"cattle": map[string]interface{}{
+							"systemDefaultRegistry": settings.SystemDefaultRegistry.Get(),
+						},
+					},
+				}
+				mocks.manager.EXPECT().Ensure(
+					namespace.TurtlesNamespace,
+					chart.TurtlesChartName,
+					chart.TurtlesChartName,
+					"",
+					"2.0.0",
+					expectedTurtlesValues,
+					gomock.AssignableToTypeOf(false),
+					"",
+				).Return(nil)
+
+				// system-upgrade-controller
+				expectedSUCValues := map[string]interface{}{
+					"priorityClassName": priorityClassName,
+					"global": map[string]interface{}{
+						"cattle": map[string]interface{}{
+							"systemDefaultRegistry": settings.SystemDefaultRegistry.Get(),
+						},
+					},
+				}
+				mocks.manager.EXPECT().Ensure(
+					namespace.System,
+					chart.SystemUpgradeControllerChartName,
+					chart.SystemUpgradeControllerChartName,
+					"",
+					"2.0.0",
+					expectedSUCValues,
+					gomock.AssignableToTypeOf(false),
+					"",
+				).Return(nil)
+
+				// rancher-operator
+				mocks.manager.EXPECT().Uninstall(operatorNamespace, "rancher-operator").Return(nil)
+				mocks.manager.EXPECT().Remove(operatorNamespace, "rancher-operator")
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1347,14 +1561,17 @@ func Test_ChartInstallation(t *testing.T) {
 
 			// create mocks for each test
 			mocks := testMocks{
-				manager:         chartfake.NewMockManager(ctrl),
-				namespaceCtrl:   fake.NewMockNonNamespacedControllerInterface[*v1.Namespace, *v1.NamespaceList](ctrl),
-				namespaceCache:  fake.NewMockNonNamespacedCacheInterface[*v1.Namespace](ctrl),
-				configCache:     fake.NewMockCacheInterface[*v1.ConfigMap](ctrl),
-				deploymentCache: fake.NewMockCacheInterface[*appsv1.Deployment](ctrl),
-				plan:            fake.NewMockControllerInterface[*upgradev1.Plan, *upgradev1.PlanList](ctrl),
-				planCache:       fake.NewMockCacheInterface[*upgradev1.Plan](ctrl),
-				clusterCache:    fake.NewMockNonNamespacedCacheInterface[*v3.Cluster](ctrl),
+				manager:                         chartfake.NewMockManager(ctrl),
+				namespaceCtrl:                   fake.NewMockNonNamespacedControllerInterface[*v1.Namespace, *v1.NamespaceList](ctrl),
+				namespaceCache:                  fake.NewMockNonNamespacedCacheInterface[*v1.Namespace](ctrl),
+				configCache:                     fake.NewMockCacheInterface[*v1.ConfigMap](ctrl),
+				deploymentCache:                 fake.NewMockCacheInterface[*appsv1.Deployment](ctrl),
+				deployment:                      fake.NewMockControllerInterface[*appsv1.Deployment, *appsv1.DeploymentList](ctrl),
+				plan:                            fake.NewMockControllerInterface[*upgradev1.Plan, *upgradev1.PlanList](ctrl),
+				planCache:                       fake.NewMockCacheInterface[*upgradev1.Plan](ctrl),
+				clusterCache:                    fake.NewMockNonNamespacedCacheInterface[*v3.Cluster](ctrl),
+				mutatingWebhookConfigurations:   fake.NewMockNonNamespacedControllerInterface[*admissionv1.MutatingWebhookConfiguration, *admissionv1.MutatingWebhookConfigurationList](ctrl),
+				validatingWebhookConfigurations: fake.NewMockNonNamespacedControllerInterface[*admissionv1.ValidatingWebhookConfiguration, *admissionv1.ValidatingWebhookConfigurationList](ctrl),
 			}
 
 			mocks.namespaceCache.EXPECT().Get(namespace.ProvisioningCAPINamespace).Return(nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "namespaces"}, namespace.ProvisioningCAPINamespace)).AnyTimes()
