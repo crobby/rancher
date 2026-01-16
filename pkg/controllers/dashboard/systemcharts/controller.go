@@ -44,6 +44,9 @@ const (
 	legacyAppFinalizer   = "systemcharts.cattle.io/legacy-k3s-based-upgrader-deprecation"
 	managedPlanFinalizer = "systemcharts.cattle.io/rancher-managed-plan"
 
+	// webhookConfigurationName is the name of the ValidatingWebhookConfiguration and MutatingWebhookConfiguration created by rancher
+	webhookConfigurationName = "rancher.cattle.io"
+
 	// managedSucDeploymentAnno is added to the system-upgrade-controller chart since Rancher v2.12
 	managedSucDeploymentAnno = "apps.cattle.io/managed-system-upgrade-controller"
 
@@ -181,8 +184,95 @@ func (h *handler) onRepo(key string, repo *catalog.ClusterRepo) (*catalog.Cluste
 				values[k] = v
 			}
 		}
-		// webhook needs to be able to adopt the MutatingWebhookConfiguration which originally wasn't a part of the
-		// chart definition, but is now part of the chart definition
+
+		// Handle rancher-webhook specific pre-installation cleanup
+		if chartDef.ChartName == chart.WebhookChartName {
+			currentMcmEnabled := false
+			if mcmVal, ok := values["mcm"].(map[string]interface{}); ok {
+				if enabledVal, ok := mcmVal["enabled"].(bool); ok {
+					currentMcmEnabled = enabledVal
+				}
+			}
+
+			// Only perform pre-checks and deletions if the incoming webhook is mcmEnabled=true
+			if currentMcmEnabled {
+				existingDeployment, err := h.deploymentCache.Get(chartDef.ReleaseNamespace, chartDef.ReleaseName)
+				if err != nil && !errors.IsNotFound(err) {
+					logrus.Errorf("[systemcharts] Error getting existing rancher-webhook to check for mcmEnabled status: %v", err)
+				}
+
+				// isDownstreamWebhook is true if ENABLE_MCM=false is found in environment variables.
+				isDownstreamWebhook := false
+				if existingDeployment != nil {
+					for _, container := range existingDeployment.Spec.Template.Spec.Containers {
+						if container.Name == "rancher-webhook" {
+							for _, envVar := range container.Env {
+								if envVar.Name == "ENABLE_MCM" && envVar.Value == "false" {
+									isDownstreamWebhook = true
+									break
+								}
+							}
+						}
+						if isDownstreamWebhook {
+							break
+						}
+					}
+				}
+
+				if isDownstreamWebhook {
+					logrus.Infof("[systemcharts] Found existing downstream rancher-webhook (ENABLE_MCM=false). Deleting it before installing upstream (mcmEnabled=true) version.")
+					if err := h.deployment.Delete(chartDef.ReleaseNamespace, chartDef.ReleaseName, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+						return repo, fmt.Errorf("failed to delete webhook deployment %s/%s: %w", chartDef.ReleaseNamespace, chartDef.ReleaseName, err)
+					}
+					if err := h.validatingWebhookConfiguration.Delete(webhookConfigurationName, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+						return repo, fmt.Errorf("failed to delete validating webhook configuration %s: %w", webhookConfigurationName, err)
+					}
+					if err := h.mutatingWebhookConfigurations.Delete(webhookConfigurationName, &metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+						return repo, fmt.Errorf("failed to delete mutating webhook configuration %s: %w", webhookConfigurationName, err)
+					}
+					logrus.Infof("[systemcharts] Successfully deleted old rancher-webhook resources.")
+				} else if existingDeployment != nil {
+					logrus.Debugf("[systemcharts] Existing rancher-webhook deployment found, but it appears to be an upstream webhook (ENABLE_MCM is not false). No deletion needed.")
+				} else {
+					logrus.Debugf("[systemcharts] No existing rancher-webhook deployment found to pre-delete.")
+				}
+			} else {
+				// We are attempting to install a downstream webhook, check if an upstream one already exists.
+				existingDeployment, err := h.deploymentCache.Get(chartDef.ReleaseNamespace, chartDef.ReleaseName)
+				if err != nil && !errors.IsNotFound(err) {
+					logrus.Errorf("[systemcharts] Error getting existing rancher-webhook to check for upstream status: %v", err)
+				}
+
+				isExistingUpstream := true
+				if existingDeployment != nil {
+					for _, container := range existingDeployment.Spec.Template.Spec.Containers {
+						if container.Name == "rancher-webhook" {
+							for _, envVar := range container.Env {
+								if envVar.Name == "ENABLE_MCM" && envVar.Value == "false" {
+									// Found an existing downstream webhook, so the existing one is NOT an upstream one.
+									isExistingUpstream = false
+									break
+								}
+							}
+						}
+						if !isExistingUpstream {
+							break
+						}
+					}
+				} else {
+					// No deployment exists, so it's not an upstream one.
+					isExistingUpstream = false
+				}
+
+				if isExistingUpstream {
+					logrus.Warnf("[systemcharts] An upstream rancher-webhook already exists. Skipping installation of downstream webhook.")
+					continue
+				}
+				logrus.Debugf("[systemcharts] Installing rancher-webhook with mcmEnabled=false. No special pre-checks or deletions required.")
+			}
+		}
+
+		// Ensure the chart is installed (or re-installed after deletion for webhook)
 		minVersion := chartDef.MinVersionSetting.Get()
 		exactVersion := chartDef.ExactVersionSetting.Get()
 		takeOwnership := chartDef.ChartName == chart.WebhookChartName || chartDef.ChartName == chart.ProvisioningCAPIChartName
